@@ -187,6 +187,51 @@ class AxiomScreenshotCaptureTest {
     }
     // ===== END SECTION: TEST_SCREENSHOT_TASKS =====
 
+    // ===== SECTION: TEST_SCREENSHOT_LITE =====
+    // Lite is the default for new installs: lightweight glass, blur only behind prominent surfaces.
+    @Test
+    fun home_light_lite() {
+        seedTasks()
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.LITE) }
+        waitForHome()
+        capture("home_light_lite")
+    }
+
+    @Test
+    fun tasks_light_lite() {
+        seedTasks()
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.LITE) }
+        openPlanner()
+        capture("tasks_light_lite")
+    }
+
+    @Test
+    fun task_filter_sheet_light_lite() {
+        seedTasks()
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.LITE) }
+        openPlanner()
+        composeRule.onNodeWithContentDescription(string(R.string.tasks_filter)).performClick()
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.filter_subject)), timeoutMillis = 5_000)
+        capture("task_filter_sheet_light_lite")
+    }
+
+    @Test
+    fun settings_dark_lite() {
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.LITE, darkTheme = true) }
+        composeRule.onNodeWithContentDescription(string(R.string.action_open_settings)).performClick()
+        composeRule.waitUntilExactlyOneExists(hasText(string(R.string.settings_glass)), timeoutMillis = 5_000)
+        capture("settings_dark_lite")
+    }
+
+    @Test
+    fun tasks_dark_off() {
+        seedTasks()
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.OFF, darkTheme = true) }
+        openPlanner()
+        capture("tasks_dark_off")
+    }
+    // ===== END SECTION: TEST_SCREENSHOT_LITE =====
+
     @Test
     @Config(qualifiers = "w840dp-h1200dp-xhdpi")
     fun home_tablet_light_full() {

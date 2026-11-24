@@ -18,6 +18,10 @@ enum class GlassLimitation {
 /**
  * The glass level the user asked for (manually or by following the recommendation), the level
  * actually rendered, the reason for any difference, and the device recommendation.
+ *
+ * @param allowsBackdropBlur whether Lite may blur the screen behind its prominent surfaces
+ *   (navigation bar, dialogs, sheets). False without RenderEffect or while Battery Saver
+ *   adaptation is active; Lite then draws every surface as lightweight glass.
  */
 data class GlassResolution(
     val requested: GlassMode,
@@ -25,9 +29,10 @@ data class GlassResolution(
     val limitation: GlassLimitation,
     val recommended: GlassMode = requested,
     val followsRecommendation: Boolean = true,
+    val allowsBackdropBlur: Boolean = true,
 ) {
     companion object {
-        val Default = GlassResolution(GlassMode.FULL, GlassMode.FULL, GlassLimitation.NONE)
+        val Default = GlassResolution(GlassMode.LITE, GlassMode.LITE, GlassLimitation.NONE)
     }
 }
 // ===== END SECTION: GLASS_RESOLUTION =====
@@ -36,10 +41,13 @@ data class GlassResolution(
 /** Device thresholds behind the automatic glass recommendation. */
 object GlassRecommendationTokens {
     /**
-     * Phones below this much memory (3–4 GB models report about 2.8–3.8 GB) are steered to
-     * Lite; 6 GB and larger phones report above it and get Full.
+     * Phones below this much memory (2 and 3 GB models report about 1.8–2.9 GB) are steered to
+     * Off; 4 GB and larger phones report above it and get Lite.
      */
-    const val FULL_GLASS_MIN_MEMORY_BYTES: Long = 5L * 1024 * 1024 * 1024
+    const val LITE_GLASS_MIN_MEMORY_BYTES: Long = 3_200L * 1024 * 1024
+
+    /** Android 9 and older devices are steered to Off. */
+    const val LITE_GLASS_MIN_SDK: Int = 29
 }
 // ===== END SECTION: GLASS_RECOMMENDATION_TOKENS =====
 
@@ -47,16 +55,18 @@ object GlassRecommendationTokens {
 /**
  * Chooses a recommended glass level for the device, then caps the requested level by device
  * support and power state. Pure functions so they can be unit tested without Android.
+ *
+ * Lite is the default everywhere it runs well; Full (the original Kyant0 Liquid Glass) is
+ * always an explicit choice, and weak devices are steered to Off.
  */
 object GlassModeResolver {
 
     /** The glass level suggested for this device when the user has not chosen one. */
     fun recommend(capability: GlassDeviceCapability): GlassMode = when {
-        !capability.supportsBlur -> GlassMode.OFF
-        !capability.supportsRefraction -> GlassMode.LITE
-        capability.isLowRamDevice -> GlassMode.LITE
-        capability.totalMemoryBytes in 1 until GlassRecommendationTokens.FULL_GLASS_MIN_MEMORY_BYTES -> GlassMode.LITE
-        else -> GlassMode.FULL
+        capability.isLowRamDevice -> GlassMode.OFF
+        capability.totalMemoryBytes in 1 until GlassRecommendationTokens.LITE_GLASS_MIN_MEMORY_BYTES -> GlassMode.OFF
+        capability.sdkInt < GlassRecommendationTokens.LITE_GLASS_MIN_SDK -> GlassMode.OFF
+        else -> GlassMode.LITE
     }
 
     /**
@@ -79,11 +89,13 @@ object GlassModeResolver {
         isPowerSaveMode: Boolean,
         adaptToBatterySaver: Boolean,
     ): GlassResolution {
+        val saveBattery = isPowerSaveMode && adaptToBatterySaver
+        // Lite needs nothing beyond plain drawing, so it is the ceiling whenever Full cannot run.
         var ceiling: GlassMode
         var reason: GlassLimitation
         when {
             !capability.supportsBlur -> {
-                ceiling = GlassMode.OFF
+                ceiling = GlassMode.LITE
                 reason = GlassLimitation.NO_BLUR_SUPPORT
             }
             !capability.supportsRefraction -> {
@@ -94,14 +106,14 @@ object GlassModeResolver {
                 ceiling = GlassMode.LITE
                 reason = GlassLimitation.LOW_RAM_DEVICE
             }
+            saveBattery -> {
+                ceiling = GlassMode.LITE
+                reason = GlassLimitation.BATTERY_SAVER
+            }
             else -> {
                 ceiling = GlassMode.FULL
                 reason = GlassLimitation.NONE
             }
-        }
-        if (isPowerSaveMode && adaptToBatterySaver && ceiling == GlassMode.FULL) {
-            ceiling = GlassMode.LITE
-            reason = GlassLimitation.BATTERY_SAVER
         }
 
         // GlassMode is declared from most to least expensive, so a higher ordinal is cheaper.
@@ -110,6 +122,7 @@ object GlassModeResolver {
             requested = requested,
             effective = effective,
             limitation = if (effective == requested) GlassLimitation.NONE else reason,
+            allowsBackdropBlur = capability.supportsBlur && !saveBattery,
         )
     }
 }

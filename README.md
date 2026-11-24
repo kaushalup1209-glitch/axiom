@@ -22,6 +22,9 @@ Package: `com.kaushalkr.axiom`.
   - Home's "Today's tasks" card uses real data (overdue and due today, progress, tick to complete);
   - `TaskCommand` / `TaskCommandExecutor` expose the same operations as structured, JSON-ready
     commands for the AI assistant (Phase 11).
+- **Liquid Glass tiers:** Lite is the default (lightweight glass, background blur only behind the
+  navigation bar, dialogs and sheets, no shaders); Full keeps the original Kyant0 Liquid Glass;
+  Off renders no glass. Weak devices are steered to Off automatically.
 - Focus, Insights, AI and Distraction Shield are placeholders naming their phase.
 
 ## Tech stack

@@ -20,7 +20,13 @@ class AxiomApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
-        // Compile every shared glass shader off the main thread before the first glass surface draws.
+    }
+
+    /**
+     * Compiles the shared Full-glass shaders off the main thread. Called only once Full glass is
+     * in effect: Lite and Off never use a RuntimeShader, so they skip the work entirely.
+     */
+    fun prewarmGlassShaders() {
         applicationScope.launch { GlassShaderCache.prewarm() }
     }
 }

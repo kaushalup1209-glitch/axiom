@@ -11,11 +11,13 @@ import com.kaushalkr.axiom.core.data.appearance.AppearanceRepository
 import com.kaushalkr.axiom.core.designsystem.glass.GlassModeResolver
 import com.kaushalkr.axiom.core.designsystem.glass.GlassResolution
 import com.kaushalkr.axiom.core.model.AppearanceSettings
+import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.platform.GlassDeviceCapability
 import com.kaushalkr.axiom.core.platform.PowerSaveModeMonitor
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 // ===== SECTION: MAIN_ACTIVITY_UI_STATE =====
@@ -38,7 +40,10 @@ class MainActivityViewModel(
     appearanceRepository: AppearanceRepository,
     powerSaveModeMonitor: PowerSaveModeMonitor,
     glassDeviceCapability: GlassDeviceCapability,
+    private val prewarmGlassShaders: () -> Unit = {},
 ) : ViewModel() {
+
+    private var shadersWarmed = false
 
     val uiState: StateFlow<MainActivityUiState> = combine(
         appearanceRepository.settings,
@@ -53,6 +58,12 @@ class MainActivityViewModel(
                 adaptToBatterySaver = settings.adaptGlassToBatterySaver,
             ),
         )
+    }.onEach { state ->
+        // Full glass is the only mode with shaders; compile them the first time it is in effect.
+        if (!shadersWarmed && state.glassResolution.effective == GlassMode.FULL) {
+            shadersWarmed = true
+            prewarmGlassShaders()
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -64,11 +75,13 @@ class MainActivityViewModel(
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val container = (checkNotNull(this[APPLICATION_KEY]) as AxiomApplication).container
+                val application = checkNotNull(this[APPLICATION_KEY]) as AxiomApplication
+                val container = application.container
                 MainActivityViewModel(
                     appearanceRepository = container.appearanceRepository,
                     powerSaveModeMonitor = container.powerSaveModeMonitor,
                     glassDeviceCapability = container.glassDeviceCapability,
+                    prewarmGlassShaders = application::prewarmGlassShaders,
                 )
             }
         }

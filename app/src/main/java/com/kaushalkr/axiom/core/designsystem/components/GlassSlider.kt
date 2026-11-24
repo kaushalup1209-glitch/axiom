@@ -47,13 +47,13 @@ import androidx.compose.ui.util.lerp
 import com.kaushalkr.axiom.core.designsystem.glass.GlassThumbTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
-import com.kaushalkr.axiom.core.designsystem.glass.glassBackdropSource
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.DampedDragAnimation
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 import com.kyant.backdrop.backdrops.rememberBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -92,7 +92,9 @@ fun GlassSlider(
     val latestOnValueChange by rememberUpdatedState(onValueChange)
     val latestOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
 
-    val trackBackdrop = rememberLayerBackdrop()
+    // Only Full glass refracts the track through the thumb, so only Full captures it.
+    val fullGlass = style.isFull
+    val trackBackdrop = if (fullGlass) rememberLayerBackdrop() else null
 
     BoxWithConstraints(
         modifier
@@ -172,7 +174,7 @@ fun GlassSlider(
         )
 
         // ===== SECTION: GLASS_SLIDER_TRACK =====
-        Box(Modifier.glassBackdropSource(trackBackdrop, style.isEnabled)) {
+        Box(if (trackBackdrop != null) Modifier.layerBackdrop(trackBackdrop) else Modifier) {
             Box(
                 Modifier
                     .clip(Capsule())
@@ -198,83 +200,98 @@ fun GlassSlider(
         // ===== END SECTION: GLASS_SLIDER_TRACK =====
 
         // ===== SECTION: GLASS_SLIDER_THUMB =====
-        Box(
-            Modifier
-                .graphicsLayer {
-                    translationX =
-                        (-size.width / 2f + trackWidth * dampedDragAnimation.progress)
-                            .fastCoerceIn(-size.width / 4f, trackWidth - size.width * 3f / 4f) *
-                        if (isLtr) 1f else -1f
-                }
-                .drawBackdrop(
-                    backdrop = rememberCombinedBackdrop(
-                        backdrop,
-                        rememberBackdrop(trackBackdrop) { drawBackdrop ->
+        if (fullGlass) {
+            Box(
+                Modifier
+                    .graphicsLayer {
+                        translationX =
+                            (-size.width / 2f + trackWidth * dampedDragAnimation.progress)
+                                .fastCoerceIn(-size.width / 4f, trackWidth - size.width * 3f / 4f) *
+                            if (isLtr) 1f else -1f
+                    }
+                    .drawBackdrop(
+                        backdrop = rememberCombinedBackdrop(
+                            backdrop,
+                            rememberBackdrop(checkNotNull(trackBackdrop)) { drawBackdrop ->
+                                val progress = dampedDragAnimation.pressProgress
+                                val scaleX = lerp(2f / 3f, 1f, progress)
+                                val scaleY = lerp(0f, 1f, progress)
+                                scale(scaleX, scaleY) {
+                                    drawBackdrop()
+                                }
+                            },
+                        ),
+                        shape = { Capsule() },
+                        effects = {
                             val progress = dampedDragAnimation.pressProgress
-                            val scaleX = lerp(2f / 3f, 1f, progress)
-                            val scaleY = lerp(0f, 1f, progress)
-                            scale(scaleX, scaleY) {
-                                drawBackdrop()
+                            blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
+                            if (style.usesRefraction) {
+                                val refraction = GlassThumbTokens.SliderPressedRefraction
+                                cachedLens(
+                                    refraction.height.toPx() * progress,
+                                    refraction.amount.toPx() * progress,
+                                    chromaticAberration = refraction.chromaticAberration,
+                                )
                             }
                         },
-                    ),
-                    shape = { Capsule() },
-                    effects = {
-                        val progress = dampedDragAnimation.pressProgress
-                        blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
-                        if (style.usesRefraction) {
-                            val refraction = GlassThumbTokens.SliderPressedRefraction
-                            cachedLens(
-                                refraction.height.toPx() * progress,
-                                refraction.amount.toPx() * progress,
-                                chromaticAberration = refraction.chromaticAberration,
+                        highlight = {
+                            val progress = dampedDragAnimation.pressProgress
+                            if (style.isEnabled) {
+                                CachedHighlights.Ambient.copy(
+                                    width = CachedHighlights.Ambient.width / 1.5f,
+                                    blurRadius = CachedHighlights.Ambient.blurRadius / 1.5f,
+                                    alpha = progress,
+                                )
+                            } else {
+                                null
+                            }
+                        },
+                        shadow = {
+                            Shadow(
+                                radius = 4f.dp,
+                                color = Color.Black.copy(alpha = 0.05f),
                             )
-                        }
-                    },
-                    highlight = {
-                        val progress = dampedDragAnimation.pressProgress
-                        if (style.isEnabled) {
-                            CachedHighlights.Ambient.copy(
-                                width = CachedHighlights.Ambient.width / 1.5f,
-                                blurRadius = CachedHighlights.Ambient.blurRadius / 1.5f,
-                                alpha = progress,
+                        },
+                        innerShadow = {
+                            val progress = dampedDragAnimation.pressProgress
+                            InnerShadow(
+                                radius = GlassThumbTokens.PressedInnerShadowRadius * progress,
+                                alpha = if (style.isEnabled) progress else 0f,
                             )
-                        } else {
-                            null
-                        }
-                    },
-                    shadow = {
-                        Shadow(
-                            radius = 4f.dp,
-                            color = Color.Black.copy(alpha = 0.05f),
-                        )
-                    },
-                    innerShadow = {
-                        val progress = dampedDragAnimation.pressProgress
-                        InnerShadow(
-                            radius = GlassThumbTokens.PressedInnerShadowRadius * progress,
-                            alpha = if (style.isEnabled) progress else 0f,
-                        )
-                    },
-                    layerBlock = {
-                        scaleX = dampedDragAnimation.scaleX
-                        scaleY = dampedDragAnimation.scaleY
-                        val velocity = dampedDragAnimation.velocity / 10f
-                        scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                        scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
-                    },
-                    onDrawSurface = {
-                        val progress = dampedDragAnimation.pressProgress
-                        val surfaceAlpha = when {
-                            style.usesRefraction -> 1f - progress
-                            style.isEnabled -> 1f - 0.6f * progress
-                            else -> 1f
-                        }
-                        drawRect(thumbColor.copy(alpha = surfaceAlpha))
-                    },
-                )
-                .size(40f.dp, 24f.dp),
-        )
+                        },
+                        layerBlock = {
+                            scaleX = dampedDragAnimation.scaleX
+                            scaleY = dampedDragAnimation.scaleY
+                            val velocity = dampedDragAnimation.velocity / 10f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                        },
+                        onDrawSurface = {
+                            val progress = dampedDragAnimation.pressProgress
+                            val surfaceAlpha = when {
+                                style.usesRefraction -> 1f - progress
+                                style.isEnabled -> 1f - 0.6f * progress
+                                else -> 1f
+                            }
+                            drawRect(thumbColor.copy(alpha = surfaceAlpha))
+                        },
+                    )
+                    .size(40f.dp, 24f.dp),
+            )
+        } else {
+            // Lite and Off: a solid thumb on a hardware shadow; same drag, squash and press growth.
+            LightControlThumb(
+                dragAnimation = dampedDragAnimation,
+                style = style,
+                thumbColor = thumbColor,
+                velocityDivisor = 10f,
+                translationX = {
+                    (-size.width / 2f + trackWidth * dampedDragAnimation.progress)
+                        .fastCoerceIn(-size.width / 4f, trackWidth - size.width * 3f / 4f) *
+                        if (isLtr) 1f else -1f
+                },
+            )
+        }
         // ===== END SECTION: GLASS_SLIDER_THUMB =====
     }
 }

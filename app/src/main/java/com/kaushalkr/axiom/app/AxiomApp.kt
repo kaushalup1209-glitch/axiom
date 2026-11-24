@@ -81,14 +81,19 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
  *    `screenBackdrop` so they refract the content scrolling beneath them.
  *
  * Chrome lives outside the captured layer, which is what prevents a capture loop.
- * With glass off, neither backdrop is captured.
+ * Full captures both backdrops; Lite captures only `screenBackdrop`, shared by its blurred
+ * navigation bar, dialogs and sheets; Off captures neither.
  */
 @Composable
 fun AxiomApp(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
-    val glassEnabled = AxiomTheme.glass.isEnabled
+    val glass = AxiomTheme.glass
+    // Full captures both layers; Lite only the screen (for its blurred navigation bar, dialogs
+    // and sheets); Off captures nothing.
+    val capturesBackground = glass.capturesBackgroundBackdrop
+    val capturesScreen = glass.capturesScreenBackdrop
     val motion = AxiomTheme.motion
     val backgroundBackdrop = rememberLayerBackdrop()
     val screenBackdrop = rememberLayerBackdrop()
@@ -139,16 +144,16 @@ fun AxiomApp(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .glassBackdropSource(screenBackdrop, glassEnabled)
+                    .glassBackdropSource(screenBackdrop, capturesScreen)
                     .then(underlyingSemantics),
             ) {
                 AxiomBackground(
                     Modifier
                         .fillMaxSize()
-                        .glassBackdropSource(backgroundBackdrop, glassEnabled),
+                        .glassBackdropSource(backgroundBackdrop, capturesBackground),
                 )
                 CompositionLocalProvider(
-                    LocalGlassBackdrop provides backdropOrEmpty(backgroundBackdrop, glassEnabled),
+                    LocalGlassBackdrop provides backdropOrEmpty(backgroundBackdrop, capturesBackground),
                     LocalScreenContentPadding provides screenContentPadding,
                 ) {
                     AxiomNavHost(
@@ -163,7 +168,7 @@ fun AxiomApp(
 
             // ===== SECTION: APP_ROOT_FLOATING_CHROME =====
             CompositionLocalProvider(
-                LocalGlassBackdrop provides backdropOrEmpty(screenBackdrop, glassEnabled),
+                LocalGlassBackdrop provides backdropOrEmpty(screenBackdrop, capturesScreen),
             ) {
                 AxiomTopActions(
                     isTopLevel = isTopLevel,

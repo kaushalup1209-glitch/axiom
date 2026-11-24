@@ -27,10 +27,10 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 /**
  * Content container rendered as Liquid Glass over [LocalGlassBackdrop].
  *
- * When [hostsGlass] is true the card exports its own rendered surface as the backdrop for its
- * children, so glass controls placed inside (toggles, sliders, buttons) refract the card
- * instead of the screen behind it. Leave it false for cards without glass children: exporting
- * records an extra layer on every redraw.
+ * When [hostsGlass] is true and glass is Full, the card exports its own rendered surface as the
+ * backdrop for its children, so glass controls placed inside (toggles, sliders, buttons)
+ * refract the card instead of the screen behind it. Leave it false for cards without glass
+ * children: exporting records an extra layer on every redraw. Lite and Off never export.
  *
  * @param spec glass appearance; dialogs pass [GlassTokens.Dialog].
  * @param onClick makes the whole card a button with the soft press overlay.
@@ -50,9 +50,10 @@ fun GlassCard(
 ) {
     val style = LocalGlassStyle.current
     val backdrop = LocalGlassBackdrop.current
-    // Only cards that host glass need their own layer; list rows skip the allocation.
-    val cardBackdrop = if (hostsGlass) rememberLayerBackdrop() else null
-    val exportsBackdrop = hostsGlass && style.isEnabled
+    // Only Full glass refracts children through the card; Lite children are lightweight glass,
+    // so neither list rows nor Lite cards allocate or record an extra layer.
+    val exportsBackdrop = hostsGlass && style.exportsNestedBackdrops
+    val cardBackdrop = if (exportsBackdrop) rememberLayerBackdrop() else null
 
     // Remembered so recomposing the card's content never rebuilds its glass pipeline.
     val surface = remember(backdrop, style, spec, shape, surfaceColor, exportsBackdrop, cardBackdrop) {

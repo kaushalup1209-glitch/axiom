@@ -20,13 +20,15 @@ import com.kaushalkr.axiom.core.designsystem.glass.shader.cachedLens
 
 // ===== SECTION: GLASS_SURFACE_MODIFIER =====
 /**
- * Draws a Liquid Glass surface described by [spec] with the Kyant0 Backdrop renderer, or a
- * solid fallback when glass is off.
+ * Draws a Liquid Glass surface described by [spec] with the Kyant0 Backdrop renderer,
+ * lightweight glass, or a solid fallback, depending on the glass mode.
  *
- * - Full: saturation + blur + lens refraction (rim, depth, optional dispersion) + rim light
- *   + reflection sheen + inner depth shadow + drop shadow.
- * - Lite: saturation + stronger blur + rim light + sheen + drop shadow (no RuntimeShader lens
- *   or inner shadow).
+ * - Full: the original Kyant0 Liquid Glass: saturation + blur + lens refraction (rim, depth,
+ *   optional dispersion) + shader rim light + reflection sheen + inner depth shadow + drop
+ *   shadow.
+ * - Lite, [GlassEmphasis.PROMINENT] with blur allowed: saturation + stronger blur + sheen,
+ *   a drawn rim and a hardware elevation shadow. No RuntimeShader of any kind.
+ * - Lite, everything else: [liteGlassSurface] (gradient, sheen, rim; no backdrop at all).
  * - Off: opaque surface, hairline border and an optional elevation shadow.
  *
  * @param shape must be a Kyant shape (`Capsule`, `RoundedRectangle`) or a corner-based shape,
@@ -67,42 +69,56 @@ fun Modifier.glassSurface(
     }
     // ===== END SECTION: GLASS_SURFACE_SOLID_FALLBACK =====
 
+    // ===== SECTION: GLASS_SURFACE_LITE_DISPATCH =====
+    // Lite: standard surfaces are lightweight glass; only prominent ones sample the backdrop.
+    if (!style.usesBackdrop(spec)) {
+        return liteGlassSurface(style, spec, shape, surfaceColor, tint, layerBlock)
+    }
+    // ===== END SECTION: GLASS_SURFACE_LITE_DISPATCH =====
+
     // ===== SECTION: GLASS_SURFACE_BACKDROP_RENDER =====
-    val highlight = spec.edgeLight.toHighlight()
+    // Full keeps the original pipeline. Lite's prominent surfaces keep only saturation + blur:
+    // no lens, no shader rim light, no blurred shadow layer (a hardware elevation instead).
+    val isFull = style.isFull
+    val highlight = if (isFull) spec.edgeLight.toHighlight() else null
     val innerShadow = if (style.usesRefraction) spec.depth?.toInnerShadow(style.isDark) else null
     val sheenBrush = spec.sheenBrush(style.isDark)
     val refraction = if (style.usesRefraction) spec.refraction else null
+    val shadow = if (isFull) spec.shadow else null
 
-    return this.drawBackdrop(
-        backdrop = backdrop,
-        shape = { shape },
-        effects = {
-            glassColorControls(style.isDark)
-            blur((spec.blurRadius * style.blurScale).toPx())
-            if (refraction != null) {
-                cachedLens(
-                    refraction.height.toPx(),
-                    refraction.amount.toPx(),
-                    depthEffect = refraction.depthEffect,
-                    chromaticAberration = refraction.chromaticAberration,
-                )
-            }
-        },
-        highlight = { highlight },
-        shadow = spec.shadow?.let { value -> { value } },
-        innerShadow = innerShadow?.let { value -> { value } },
-        layerBlock = layerBlock,
-        exportedBackdrop = exportedBackdrop,
-        onDrawSurface = {
-            if (tint.isSpecified) {
-                drawRect(tint, blendMode = BlendMode.Hue)
-                drawRect(tint.copy(alpha = 0.75f))
-            } else {
-                drawRect(surfaceColor)
-            }
-            if (sheenBrush != null) drawRect(sheenBrush)
-        },
-    )
+    return this
+        .then(if (!isFull) Modifier.glassSurfaceLayer(shape, spec.fallbackElevation, layerBlock = null, clip = false) else Modifier)
+        .drawBackdrop(
+            backdrop = backdrop,
+            shape = { shape },
+            effects = {
+                glassColorControls(style.isDark)
+                blur((spec.blurRadius * style.blurScale).toPx())
+                if (refraction != null) {
+                    cachedLens(
+                        refraction.height.toPx(),
+                        refraction.amount.toPx(),
+                        depthEffect = refraction.depthEffect,
+                        chromaticAberration = refraction.chromaticAberration,
+                    )
+                }
+            },
+            highlight = highlight?.let { value -> { value } },
+            shadow = shadow?.let { value -> { value } },
+            innerShadow = innerShadow?.let { value -> { value } },
+            layerBlock = layerBlock,
+            exportedBackdrop = exportedBackdrop,
+            onDrawSurface = {
+                if (tint.isSpecified) {
+                    drawRect(tint, blendMode = BlendMode.Hue)
+                    drawRect(tint.copy(alpha = 0.75f))
+                } else {
+                    drawRect(surfaceColor)
+                }
+                if (sheenBrush != null) drawRect(sheenBrush)
+            },
+        )
+        .then(if (!isFull) Modifier.liteGlassRim(style, shape) else Modifier)
     // ===== END SECTION: GLASS_SURFACE_BACKDROP_RENDER =====
 }
 // ===== END SECTION: GLASS_SURFACE_MODIFIER =====

@@ -49,12 +49,14 @@ com.kaushalkr.axiom
 │   │   │   ├── GlassModeResolver.kt      Caps requested mode by device and power state
 │   │   │   ├── GlassStyle.kt             Per-mode rendering parameters + CompositionLocals
 │   │   │   ├── GlassBackdrops.kt         LocalGlassBackdrop, capture helpers
-│   │   │   ├── GlassSurfaceModifier.kt   Modifier.glassSurface (Full / Lite / Off)
+│   │   │   ├── GlassSurfaceModifier.kt   Modifier.glassSurface (Full / Lite / Off dispatch)
+│   │   │   ├── GlassLiteSurface.kt       Lite lightweight glass: gradient, sheen, rim, one layer
 │   │   │   ├── shader/                   Shared compiled lens and highlight shaders (GlassShaderCache)
 │   │   │   └── interaction/              DampedDragAnimation, InteractiveHighlight, gestures
 │   │   └── components/               One reusable component per file:
 │   │       GlassCard, GlassButton, GlassIconButton, GlassToggle, GlassSlider,
-│   │       GlassTabRow, GlassTab, GlassSegmentedControl, GlassDialog, GlassOverlayHost,
+│   │       GlassTabRow (+ GlassTabRowLight), GlassTab, LightControlThumb,
+│   │       GlassSegmentedControl, GlassDialog, GlassOverlayHost,
 │   │       GlassBottomSheet, GlassTextField, GlassSearchField, GlassUndoSnackbarHost,
 │   │       AxiomBackground, AxiomScreenColumn, ScreenHeader, AxiomIconBadge, AxiomPill,
 │   │       AxiomChip, AxiomTextField, AxiomMonthCalendar, StatusBarScrim
@@ -121,14 +123,21 @@ Rules that keep this correct:
   screen, and dialogs are shown through `GlassOverlayHost`.
 - Components never check the glass mode themselves beyond reading `LocalGlassStyle`.
 
-| Mode | Captures backdrops | Blur | Lens refraction | Depth shadow | Rim light + sheen | Interactive light | Surfaces |
-|---|---|---|---|---|---|---|---|
-| Full | yes | yes | yes (wide rim, depth; dispersion on chrome) | yes | yes | RuntimeShader | tinted glass |
-| Lite | yes | yes (1.5× radius) | no | no | yes | flat glow | stronger tint |
-| Off | no | no | no | no | no | flat glow | opaque + hairline border |
+| Mode | Captured layers | Backdrop blur | Lens refraction | Shaders | Standard surfaces (cards, rows, timer, buttons, inputs, controls) | Prominent surfaces (navigation bar, dialogs, sheets) |
+|---|---|---|---|---|---|---|
+| Full (opt-in) | background + screen + per-card | every surface | yes | lens, rim light, press light | original Kyant0 Liquid Glass | original Kyant0 Liquid Glass |
+| Lite (default) | screen only | prominent only (1.5× radius) | no | none | lightweight glass: gradient, sheen, drawn rim, no layer capture | blur + tint + drawn rim + hardware shadow |
+| Off | none | none | no | none | opaque + hairline border | opaque + hairline border |
+
+Lite drops blur entirely (lightweight glass everywhere, nothing captured) when the device has no
+RenderEffect (Android 11 and lower) or while "Adapt to Battery Saver" is active. A screen in Lite
+therefore blurs at most two surfaces: the navigation bar and one open dialog or sheet. Mark a
+surface `GlassEmphasis.PROMINENT` in `GlassTokens` only if it is that kind of surface.
 
 ### Where to tune
 
+- **Lite look:** `GlassLiteTokens` (fill gradient, rim colours, thumb and indicator details) and the
+  Lite rows of `GlassTintTokens`.
 - **Glass look:** `GlassTokens.kt`. One `GlassSurfaceSpec` per surface kind (`Card`, `Dialog`,
   `Button`, `FloatingButton`, `NavigationBar`, `ListItem`, `Input`, `Sheet`, `Snackbar`,
   `SegmentedControl`), plus indicator, thumb, press,
@@ -166,16 +175,20 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
 - **AI preparation:** the assistant should call `AppContainer.taskCommandExecutor` with
   `TaskCommand`s (`create_task`, `update_task`, `reschedule_task`, `complete_task`, `delete_task`,
   `list_open_tasks`). `needsConfirmation` marks the ones to confirm with the user first.
-- **Glass recommendation:** with no manual choice, `GlassModeResolver.recommend` picks Off below
-  Android 12, Lite on Android 12, low-RAM devices and phones under ~5 GB memory, otherwise Full.
-  Settings shows the recommendation and can restore it.
+- **Glass recommendation:** with no manual choice (new installs, or after Reset appearance),
+  `GlassModeResolver.recommend` picks Lite, or Off on low-RAM devices, phones under ~3 GB memory
+  and Android 9 or older. Full is never chosen automatically. Settings shows the recommendation
+  and can restore it.
+- **Shaders** are compiled (off the main thread) only once Full glass is in effect.
 
 ## Performance rules
 
 - Remember glass modifiers (`GlassCard`, `GlassButton` do this) and use shared shapes from
   `GlassShapes`, so recomposition never rebuilds the glass pipeline.
-- Set `hostsGlass = true` on a `GlassCard` only when it contains glass controls; exporting a
-  backdrop records an extra layer on every redraw.
+- Set `hostsGlass = true` on a `GlassCard` only when it contains glass controls; in Full, exporting
+  a backdrop records an extra layer on every redraw (Lite and Off never export).
+- Lite reuses one captured layer (`screenBackdrop`) for every blurred surface; do not add new
+  backdrop captures or `drawBackdrop` calls for standard surfaces.
 - Keep ticking values out of card parameters: pass a `State` and read it in the smallest
   composable (see `QuickFocusCard`). Use `animate = false` on progress that ticks.
 - Tickers come from `TimeProvider.ticks` inside `WhileSubscribed` flows, so they stop when the

@@ -38,8 +38,8 @@ fun AxiomTheme(
 ) {
     val colors = if (darkTheme) DarkAxiomColors else LightAxiomColors
     val colorScheme = remember(colors) { colors.toMaterialColorScheme() }
-    val glassStyle = remember(glassResolution.effective, glassTintStrength, colors) {
-        GlassStyle.create(glassResolution.effective, glassTintStrength, colors)
+    val glassStyle = remember(glassResolution.effective, glassResolution.allowsBackdropBlur, glassTintStrength, colors) {
+        GlassStyle.create(glassResolution.effective, glassTintStrength, colors, glassResolution.allowsBackdropBlur)
     }
     val motion = remember(animationScale) { AxiomMotion(animationScale.factor) }
     val pressIndication = remember(colors, motion) { AxiomPressIndication(colors.pressOverlay, motion) }

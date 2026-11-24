@@ -17,6 +17,8 @@ data class GlassDeviceCapability(
     val isLowRamDevice: Boolean,
     /** Physical memory reported by the system, in bytes. */
     val totalMemoryBytes: Long,
+    /** Android API level; older releases usually ship with weaker GPUs. */
+    val sdkInt: Int = Build.VERSION_CODES.TIRAMISU,
 ) {
     companion object {
         fun from(context: Context): GlassDeviceCapability {
@@ -27,6 +29,7 @@ data class GlassDeviceCapability(
                 supportsRefraction = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
                 isLowRamDevice = activityManager?.isLowRamDevice == true,
                 totalMemoryBytes = memoryInfo.totalMem,
+                sdkInt = Build.VERSION.SDK_INT,
             )
         }
 
@@ -36,6 +39,7 @@ data class GlassDeviceCapability(
             supportsRefraction = true,
             isLowRamDevice = false,
             totalMemoryBytes = 8L * 1024 * 1024 * 1024,
+            sdkInt = Build.VERSION_CODES.VANILLA_ICE_CREAM,
         )
     }
 }

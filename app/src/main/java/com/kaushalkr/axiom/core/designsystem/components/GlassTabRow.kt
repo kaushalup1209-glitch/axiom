@@ -80,9 +80,11 @@ import kotlin.math.sign
 /**
  * A capsule of equally sized tabs with a draggable Liquid Glass selection indicator.
  *
- * Content is drawn twice: once normally and once tinted with the accent colour. The tinted
- * copy is captured and shown only through the indicator, which in Full glass becomes a
- * refracting, dispersive lens while pressed or dragged.
+ * Content is drawn twice: once normally and once tinted with the accent colour. In Full glass
+ * the tinted copy is captured and shown only through the indicator, which becomes a
+ * refracting, dispersive lens while pressed or dragged. Lite and Off share the same drag
+ * physics but draw the indicator and clip the tinted copy directly ([LightTabRowLayers]),
+ * with no capture or lens.
  *
  * @param selectedIndex currently selected tab.
  * @param onTabSelected called only when the user selects a different tab by dragging the
@@ -110,9 +112,11 @@ fun GlassTabRow(
     val backdrop = LocalGlassBackdrop.current
     val isLightTheme = !colors.isDark
     val accentColor = colors.accent
+    val fullGlass = style.isFull
     val resolvedContainerColor = when {
         containerColor != Color.Unspecified -> containerColor
         !style.isEnabled -> style.solidSurfaceColor
+        !fullGlass && style.usesBackdrop(spec) -> style.blurredChromeSurfaceColor
         else -> style.chromeSurfaceColor
     }
     // Catalog default: a faint shade drawn over the indicator (used by the navigation bar).
@@ -121,8 +125,6 @@ fun GlassTabRow(
 
     val latestSelectedIndex by rememberUpdatedState(selectedIndex)
     val latestOnTabSelected by rememberUpdatedState(onTabSelected)
-
-    val tabsBackdrop = rememberLayerBackdrop()
 
     // ===== SECTION: GLASS_TAB_ROW_RESTING_GLASS =====
     val containerHighlight = spec.edgeLight.toHighlight()
@@ -219,63 +221,14 @@ fun GlassTabRow(
         val highlightModifier = if (style.isEnabled) interactiveHighlight.modifier else Modifier
         val highlightGestureModifier = if (style.isEnabled) interactiveHighlight.gestureModifier else Modifier
 
-        // ===== SECTION: GLASS_TAB_ROW_CONTAINER =====
-        Row(
-            Modifier
-                .graphicsLayer {
-                    translationX = panelOffset
-                }
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { Capsule() },
-                    effects = {
-                        if (style.isEnabled) {
-                            glassColorControls(style.isDark)
-                            blur(spec.blurRadius.toPx() * style.blurScale)
-                        }
-                        if (containerRefraction != null) {
-                            cachedLens(
-                                containerRefraction.height.toPx(),
-                                containerRefraction.amount.toPx(),
-                                depthEffect = containerRefraction.depthEffect,
-                                chromaticAberration = containerRefraction.chromaticAberration,
-                            )
-                        }
-                    },
-                    highlight = if (style.isEnabled) ({ containerHighlight }) else null,
-                    shadow = if (floating) spec.shadow?.let { value -> { value } } else null,
-                    innerShadow = containerInnerShadow?.let { value -> { value } },
-                    layerBlock = {
-                        val progress = dampedDragAnimation.pressProgress
-                        val scale = lerp(1f, 1f + GlassIndicatorTokens.PressedContainerGrowth.toPx() / size.width, progress)
-                        scaleX = scale
-                        scaleY = scale
-                    },
-                    onDrawSurface = {
-                        drawRect(resolvedContainerColor)
-                        if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
-                    },
-                )
-                .then(highlightModifier)
-                .height(containerHeight)
-                .fillMaxWidth()
-                .padding(containerPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content,
-        )
-        // ===== END SECTION: GLASS_TAB_ROW_CONTAINER =====
+        if (fullGlass) {
+            // Full: the original Kyant0 rendering. The tinted copy is captured so the
+            // indicator can refract it.
+            val tabsBackdrop = rememberLayerBackdrop()
 
-        // ===== SECTION: GLASS_TAB_ROW_TINTED_CONTENT =====
-        CompositionLocalProvider(
-            LocalGlassTabScale provides {
-                lerp(1f, GlassIndicatorTokens.PRESSED_CONTENT_SCALE, dampedDragAnimation.pressProgress)
-            },
-        ) {
+            // ===== SECTION: GLASS_TAB_ROW_CONTAINER =====
             Row(
                 Modifier
-                    .clearAndSetSemantics {}
-                    .alpha(0f)
-                    .layerBackdrop(tabsBackdrop)
                     .graphicsLayer {
                         translationX = panelOffset
                     }
@@ -283,18 +236,134 @@ fun GlassTabRow(
                         backdrop = backdrop,
                         shape = { Capsule() },
                         effects = {
-                            val progress = dampedDragAnimation.pressProgress
                             if (style.isEnabled) {
                                 glassColorControls(style.isDark)
                                 blur(spec.blurRadius.toPx() * style.blurScale)
                             }
                             if (containerRefraction != null) {
-                                // At rest the indicator shows the same rim bend as the container;
-                                // fully pressed it reaches the catalog lens used while swiping.
-                                val pressed = GlassIndicatorTokens.TintedContentPressedRefraction
                                 cachedLens(
-                                    lerp(containerRefraction.height.toPx(), pressed.height.toPx(), progress),
-                                    lerp(containerRefraction.amount.toPx(), pressed.amount.toPx(), progress),
+                                    containerRefraction.height.toPx(),
+                                    containerRefraction.amount.toPx(),
+                                    depthEffect = containerRefraction.depthEffect,
+                                    chromaticAberration = containerRefraction.chromaticAberration,
+                                )
+                            }
+                        },
+                        highlight = if (style.isEnabled) ({ containerHighlight }) else null,
+                        shadow = if (floating) spec.shadow?.let { value -> { value } } else null,
+                        innerShadow = containerInnerShadow?.let { value -> { value } },
+                        layerBlock = {
+                            val progress = dampedDragAnimation.pressProgress
+                            val scale = lerp(1f, 1f + GlassIndicatorTokens.PressedContainerGrowth.toPx() / size.width, progress)
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                        onDrawSurface = {
+                            drawRect(resolvedContainerColor)
+                            if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
+                        },
+                    )
+                    .then(highlightModifier)
+                    .height(containerHeight)
+                    .fillMaxWidth()
+                    .padding(containerPadding),
+                verticalAlignment = Alignment.CenterVertically,
+                content = content,
+            )
+            // ===== END SECTION: GLASS_TAB_ROW_CONTAINER =====
+
+            // ===== SECTION: GLASS_TAB_ROW_TINTED_CONTENT =====
+            CompositionLocalProvider(
+                LocalGlassTabScale provides {
+                    lerp(1f, GlassIndicatorTokens.PRESSED_CONTENT_SCALE, dampedDragAnimation.pressProgress)
+                },
+            ) {
+                Row(
+                    Modifier
+                        .clearAndSetSemantics {}
+                        .alpha(0f)
+                        .layerBackdrop(tabsBackdrop)
+                        .graphicsLayer {
+                            translationX = panelOffset
+                        }
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { Capsule() },
+                            effects = {
+                                val progress = dampedDragAnimation.pressProgress
+                                if (style.isEnabled) {
+                                    glassColorControls(style.isDark)
+                                    blur(spec.blurRadius.toPx() * style.blurScale)
+                                }
+                                if (containerRefraction != null) {
+                                    // At rest the indicator shows the same rim bend as the container;
+                                    // fully pressed it reaches the catalog lens used while swiping.
+                                    val pressed = GlassIndicatorTokens.TintedContentPressedRefraction
+                                    cachedLens(
+                                        lerp(containerRefraction.height.toPx(), pressed.height.toPx(), progress),
+                                        lerp(containerRefraction.amount.toPx(), pressed.amount.toPx(), progress),
+                                    )
+                                }
+                            },
+                            highlight = {
+                                val progress = dampedDragAnimation.pressProgress
+                                if (style.isEnabled) CachedHighlights.Default.copy(alpha = progress) else null
+                            },
+                            onDrawSurface = {
+                                drawRect(resolvedContainerColor)
+                                if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
+                                // Custom indicator fill (segmented controls): painted into this hidden
+                                // copy at the indicator position, so it sits beneath the accent label
+                                // the indicator shows. Full glass fades it on press into a clear lens.
+                                if (indicatorColor != Color.Unspecified) {
+                                    val progress = dampedDragAnimation.pressProgress
+                                    val fillAlpha = if (style.usesRefraction) 1f - progress else 1f - 0.5f * progress
+                                    val horizontalInset = containerPadding.toPx()
+                                    val left =
+                                        if (isLtr) horizontalInset + dampedDragAnimation.value * tabWidth
+                                        else size.width - horizontalInset - (dampedDragAnimation.value + 1f) * tabWidth
+                                    drawRect(
+                                        color = indicatorColor,
+                                        topLeft = Offset(left, 0f),
+                                        size = Size(tabWidth, size.height),
+                                        alpha = fillAlpha,
+                                    )
+                                }
+                            },
+                        )
+                        .then(highlightModifier)
+                        .height(indicatorHeight)
+                        .fillMaxWidth()
+                        .padding(horizontal = containerPadding)
+                        .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = content,
+                )
+            }
+            // ===== END SECTION: GLASS_TAB_ROW_TINTED_CONTENT =====
+
+            // ===== SECTION: GLASS_TAB_ROW_INDICATOR =====
+            Box(
+                Modifier
+                    .padding(horizontal = containerPadding)
+                    .graphicsLayer {
+                        translationX =
+                            if (isLtr) dampedDragAnimation.value * tabWidth + panelOffset
+                            else size.width - (dampedDragAnimation.value + 1f) * tabWidth + panelOffset
+                    }
+                    .then(highlightGestureModifier)
+                    .then(dampedDragAnimation.modifier)
+                    .drawBackdrop(
+                        backdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop),
+                        shape = { Capsule() },
+                        effects = {
+                            val progress = dampedDragAnimation.pressProgress
+                            if (style.usesRefraction) {
+                                val pressed = GlassIndicatorTokens.PressedRefraction
+                                cachedLens(
+                                    pressed.height.toPx() * progress,
+                                    pressed.amount.toPx() * progress,
+                                    chromaticAberration = pressed.chromaticAberration,
                                 )
                             }
                         },
@@ -302,98 +371,58 @@ fun GlassTabRow(
                             val progress = dampedDragAnimation.pressProgress
                             if (style.isEnabled) CachedHighlights.Default.copy(alpha = progress) else null
                         },
+                        shadow = {
+                            val progress = dampedDragAnimation.pressProgress
+                            Shadow(alpha = progress)
+                        },
+                        innerShadow = {
+                            val progress = dampedDragAnimation.pressProgress
+                            InnerShadow(
+                                radius = GlassIndicatorTokens.PressedInnerShadowRadius * progress,
+                                alpha = if (style.isEnabled) progress else 0f,
+                            )
+                        },
+                        layerBlock = {
+                            scaleX = dampedDragAnimation.scaleX
+                            scaleY = dampedDragAnimation.scaleY
+                            val velocity = dampedDragAnimation.velocity / 10f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                        },
                         onDrawSurface = {
-                            drawRect(resolvedContainerColor)
-                            if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
-                            // Custom indicator fill (segmented controls): painted into this hidden
-                            // copy at the indicator position, so it sits beneath the accent label
-                            // the indicator shows. Full glass fades it on press into a clear lens.
-                            if (indicatorColor != Color.Unspecified) {
-                                val progress = dampedDragAnimation.pressProgress
-                                val fillAlpha = if (style.usesRefraction) 1f - progress else 1f - 0.5f * progress
-                                val horizontalInset = containerPadding.toPx()
-                                val left =
-                                    if (isLtr) horizontalInset + dampedDragAnimation.value * tabWidth
-                                    else size.width - horizontalInset - (dampedDragAnimation.value + 1f) * tabWidth
-                                drawRect(
-                                    color = indicatorColor,
-                                    topLeft = Offset(left, 0f),
-                                    size = Size(tabWidth, size.height),
-                                    alpha = fillAlpha,
-                                )
+                            val progress = dampedDragAnimation.pressProgress
+                            if (indicatorColor == Color.Unspecified) {
+                                drawRect(defaultIndicatorShade, alpha = 1f - progress)
                             }
+                            drawRect(Color.Black.copy(alpha = 0.03f * progress))
                         },
                     )
-                    .then(highlightModifier)
                     .height(indicatorHeight)
-                    .fillMaxWidth()
-                    .padding(horizontal = containerPadding)
-                    .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
-                verticalAlignment = Alignment.CenterVertically,
+                    .fillMaxWidth(1f / tabsCount),
+            )
+            // ===== END SECTION: GLASS_TAB_ROW_INDICATOR =====
+        } else {
+            // ===== SECTION: GLASS_TAB_ROW_LIGHT =====
+            LightTabRowLayers(
+                style = style,
+                spec = spec,
+                floating = floating,
+                containerHeight = containerHeight,
+                indicatorHeight = indicatorHeight,
+                containerPadding = containerPadding,
+                containerColor = resolvedContainerColor,
+                indicatorColor = if (indicatorColor != Color.Unspecified) indicatorColor else defaultIndicatorShade,
+                tabsCount = tabsCount,
+                tabWidth = tabWidth,
+                isLtr = isLtr,
+                panelOffset = { panelOffset },
+                dragAnimation = dampedDragAnimation,
+                // Lite keeps the flat press glow; Off has none.
+                interactiveHighlight = if (style.isEnabled) interactiveHighlight else null,
                 content = content,
             )
+            // ===== END SECTION: GLASS_TAB_ROW_LIGHT =====
         }
-        // ===== END SECTION: GLASS_TAB_ROW_TINTED_CONTENT =====
-
-        // ===== SECTION: GLASS_TAB_ROW_INDICATOR =====
-        Box(
-            Modifier
-                .padding(horizontal = containerPadding)
-                .graphicsLayer {
-                    translationX =
-                        if (isLtr) dampedDragAnimation.value * tabWidth + panelOffset
-                        else size.width - (dampedDragAnimation.value + 1f) * tabWidth + panelOffset
-                }
-                .then(highlightGestureModifier)
-                .then(dampedDragAnimation.modifier)
-                .drawBackdrop(
-                    backdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop),
-                    shape = { Capsule() },
-                    effects = {
-                        val progress = dampedDragAnimation.pressProgress
-                        if (style.usesRefraction) {
-                            val pressed = GlassIndicatorTokens.PressedRefraction
-                            cachedLens(
-                                pressed.height.toPx() * progress,
-                                pressed.amount.toPx() * progress,
-                                chromaticAberration = pressed.chromaticAberration,
-                            )
-                        }
-                    },
-                    highlight = {
-                        val progress = dampedDragAnimation.pressProgress
-                        if (style.isEnabled) CachedHighlights.Default.copy(alpha = progress) else null
-                    },
-                    shadow = {
-                        val progress = dampedDragAnimation.pressProgress
-                        Shadow(alpha = progress)
-                    },
-                    innerShadow = {
-                        val progress = dampedDragAnimation.pressProgress
-                        InnerShadow(
-                            radius = GlassIndicatorTokens.PressedInnerShadowRadius * progress,
-                            alpha = if (style.isEnabled) progress else 0f,
-                        )
-                    },
-                    layerBlock = {
-                        scaleX = dampedDragAnimation.scaleX
-                        scaleY = dampedDragAnimation.scaleY
-                        val velocity = dampedDragAnimation.velocity / 10f
-                        scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                        scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
-                    },
-                    onDrawSurface = {
-                        val progress = dampedDragAnimation.pressProgress
-                        if (indicatorColor == Color.Unspecified) {
-                            drawRect(defaultIndicatorShade, alpha = 1f - progress)
-                        }
-                        drawRect(Color.Black.copy(alpha = 0.03f * progress))
-                    },
-                )
-                .height(indicatorHeight)
-                .fillMaxWidth(1f / tabsCount),
-        )
-        // ===== END SECTION: GLASS_TAB_ROW_INDICATOR =====
     }
 }
 // ===== END SECTION: GLASS_TAB_ROW =====

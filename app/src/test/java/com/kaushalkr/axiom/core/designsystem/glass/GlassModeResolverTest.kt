@@ -3,15 +3,20 @@ package com.kaushalkr.axiom.core.designsystem.glass
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.platform.GlassDeviceCapability
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 // ===== SECTION: TEST_GLASS_MODE_RESOLVER =====
 class GlassModeResolverTest {
 
     private val modernDevice = GlassDeviceCapability.Full
-    private val android12Device = modernDevice.copy(supportsRefraction = false)
-    private val android11Device = modernDevice.copy(supportsBlur = false, supportsRefraction = false)
+    private val android12Device = modernDevice.copy(supportsRefraction = false, sdkInt = 31)
+    private val android11Device = modernDevice.copy(supportsBlur = false, supportsRefraction = false, sdkInt = 30)
+    private val android9Device = android11Device.copy(sdkInt = 28)
     private val lowRamDevice = modernDevice.copy(isLowRamDevice = true)
+    private val threeGigabytePhone = modernDevice.copy(totalMemoryBytes = 2_800L * 1024 * 1024)
+    private val fourGigabytePhone = modernDevice.copy(totalMemoryBytes = 3_700L * 1024 * 1024)
 
     @Test
     fun modernDevice_rendersRequestedMode() {
@@ -19,6 +24,7 @@ class GlassModeResolverTest {
             val result = resolve(requested, modernDevice)
             assertEquals(requested, result.effective)
             assertEquals(GlassLimitation.NONE, result.limitation)
+            assertTrue(result.allowsBackdropBlur)
         }
     }
 
@@ -27,15 +33,20 @@ class GlassModeResolverTest {
         val result = resolve(GlassMode.FULL, android12Device)
         assertEquals(GlassMode.LITE, result.effective)
         assertEquals(GlassLimitation.NO_REFRACTION_SUPPORT, result.limitation)
+        assertTrue(result.allowsBackdropBlur)
     }
 
     @Test
-    fun withoutRenderEffect_everythingFallsBackToOff() {
-        listOf(GlassMode.FULL, GlassMode.LITE).forEach { requested ->
-            val result = resolve(requested, android11Device)
-            assertEquals(GlassMode.OFF, result.effective)
-            assertEquals(GlassLimitation.NO_BLUR_SUPPORT, result.limitation)
-        }
+    fun withoutRenderEffect_liteStillRunsWithoutBlur() {
+        val full = resolve(GlassMode.FULL, android11Device)
+        assertEquals(GlassMode.LITE, full.effective)
+        assertEquals(GlassLimitation.NO_BLUR_SUPPORT, full.limitation)
+        assertFalse(full.allowsBackdropBlur)
+
+        val lite = resolve(GlassMode.LITE, android11Device)
+        assertEquals(GlassMode.LITE, lite.effective)
+        assertEquals(GlassLimitation.NONE, lite.limitation)
+        assertFalse(lite.allowsBackdropBlur)
     }
 
     @Test
@@ -46,14 +57,20 @@ class GlassModeResolverTest {
     }
 
     @Test
-    fun batterySaver_capsFullToLite_onlyWhenAdaptationEnabled() {
+    fun batterySaver_capsFullToLite_andDropsBlur_onlyWhenAdaptationEnabled() {
         val adapted = resolve(GlassMode.FULL, modernDevice, powerSave = true, adapt = true)
         assertEquals(GlassMode.LITE, adapted.effective)
         assertEquals(GlassLimitation.BATTERY_SAVER, adapted.limitation)
+        assertFalse(adapted.allowsBackdropBlur)
+
+        val liteAdapted = resolve(GlassMode.LITE, modernDevice, powerSave = true, adapt = true)
+        assertEquals(GlassMode.LITE, liteAdapted.effective)
+        assertFalse(liteAdapted.allowsBackdropBlur)
 
         val notAdapted = resolve(GlassMode.FULL, modernDevice, powerSave = true, adapt = false)
         assertEquals(GlassMode.FULL, notAdapted.effective)
         assertEquals(GlassLimitation.NONE, notAdapted.limitation)
+        assertTrue(notAdapted.allowsBackdropBlur)
     }
 
     @Test
@@ -68,28 +85,37 @@ class GlassModeResolverTest {
     }
 
     @Test
-    fun recommendation_followsDeviceTier() {
-        assertEquals(GlassMode.FULL, GlassModeResolver.recommend(modernDevice))
+    fun recommendation_isLite_andOffForWeakDevices() {
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(modernDevice))
         assertEquals(GlassMode.LITE, GlassModeResolver.recommend(android12Device))
-        assertEquals(GlassMode.OFF, GlassModeResolver.recommend(android11Device))
-        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(lowRamDevice))
-        val fourGigabytePhone = modernDevice.copy(totalMemoryBytes = 3_700L * 1024 * 1024)
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(android11Device))
         assertEquals(GlassMode.LITE, GlassModeResolver.recommend(fourGigabytePhone))
-        val sixGigabytePhone = modernDevice.copy(totalMemoryBytes = 5_600L * 1024 * 1024)
-        assertEquals(GlassMode.FULL, GlassModeResolver.recommend(sixGigabytePhone))
+        assertEquals(GlassMode.OFF, GlassModeResolver.recommend(android9Device))
+        assertEquals(GlassMode.OFF, GlassModeResolver.recommend(lowRamDevice))
+        assertEquals(GlassMode.OFF, GlassModeResolver.recommend(threeGigabytePhone))
+        // Unknown memory (0) is not treated as weak.
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(modernDevice.copy(totalMemoryBytes = 0)))
+    }
+
+    @Test
+    fun newInstall_followsRecommendation_asLite() {
+        val automatic = GlassModeResolver.resolveWithRecommendation(null, modernDevice, isPowerSaveMode = false, adaptToBatterySaver = true)
+        assertEquals(GlassMode.LITE, automatic.effective)
+        assertEquals(GlassMode.LITE, automatic.recommended)
+        assertEquals(true, automatic.followsRecommendation)
+        assertEquals(GlassMode.LITE, GlassResolution.Default.effective)
     }
 
     @Test
     fun manualChoice_overridesRecommendation() {
-        val fourGigabytePhone = modernDevice.copy(totalMemoryBytes = 3_700L * 1024 * 1024)
-        val automatic = GlassModeResolver.resolveWithRecommendation(null, fourGigabytePhone, isPowerSaveMode = false, adaptToBatterySaver = true)
-        assertEquals(GlassMode.LITE, automatic.effective)
-        assertEquals(true, automatic.followsRecommendation)
-
         val manual = GlassModeResolver.resolveWithRecommendation(GlassMode.FULL, fourGigabytePhone, isPowerSaveMode = false, adaptToBatterySaver = true)
         assertEquals(GlassMode.FULL, manual.effective)
         assertEquals(GlassMode.LITE, manual.recommended)
         assertEquals(false, manual.followsRecommendation)
+
+        val weak = GlassModeResolver.resolveWithRecommendation(GlassMode.LITE, threeGigabytePhone, isPowerSaveMode = false, adaptToBatterySaver = true)
+        assertEquals(GlassMode.LITE, weak.effective)
+        assertEquals(GlassMode.OFF, weak.recommended)
     }
 
     private fun resolve(

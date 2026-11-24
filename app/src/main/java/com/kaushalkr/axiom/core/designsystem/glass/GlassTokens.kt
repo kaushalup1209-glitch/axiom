@@ -57,6 +57,21 @@ data class GlassDepth(
     )
 }
 
+/**
+ * How much rendering budget a surface gets in Lite glass. Full glass renders every surface
+ * the same way; Off renders none.
+ */
+enum class GlassEmphasis {
+    /** Cards, list rows, buttons, inputs and controls: lightweight glass in Lite. */
+    STANDARD,
+
+    /**
+     * The one or two surfaces a screen is built around (navigation bar, dialogs, sheets):
+     * Lite blurs the screen behind them. Keep this to at most two visible at once.
+     */
+    PROMINENT,
+}
+
 /** Complete appearance of one kind of glass surface. */
 @Immutable
 data class GlassSurfaceSpec(
@@ -68,8 +83,9 @@ data class GlassSurfaceSpec(
     val sheenDark: Float,
     val depth: GlassDepth?,
     val shadow: Shadow?,
-    /** Elevation shadow used instead of glass when glass is off. */
+    /** Hardware elevation shadow used wherever the surface is drawn without Full glass. */
     val fallbackElevation: Dp = 0.dp,
+    val emphasis: GlassEmphasis = GlassEmphasis.STANDARD,
 ) {
     /** A size-independent vertical reflection gradient; Compose caches its shader per size. */
     fun sheenBrush(isDark: Boolean): Brush? {
@@ -126,6 +142,7 @@ object GlassTokens {
         depth = GlassDepth(radius = 18.dp, lightAlpha = 0.08f, darkAlpha = 0.25f),
         shadow = Shadow(radius = 32.dp, color = Color.Black.copy(alpha = 0.14f)),
         fallbackElevation = 12.dp,
+        emphasis = GlassEmphasis.PROMINENT,
     )
 
     val Button = GlassSurfaceSpec(
@@ -158,6 +175,7 @@ object GlassTokens {
         depth = GlassDepth(radius = 12.dp, lightAlpha = 0.06f, darkAlpha = 0.20f),
         shadow = Shadow.Default,
         fallbackElevation = 8.dp,
+        emphasis = GlassEmphasis.PROMINENT,
     )
 
     /**
@@ -199,6 +217,7 @@ object GlassTokens {
         depth = GlassDepth(radius = 18.dp, lightAlpha = 0.07f, darkAlpha = 0.24f),
         shadow = Shadow(radius = 32.dp, color = Color.Black.copy(alpha = 0.16f)),
         fallbackElevation = 16.dp,
+        emphasis = GlassEmphasis.PROMINENT,
     )
 
     /** The floating undo snackbar. */
@@ -276,22 +295,27 @@ object GlassBackgroundTokens {
 // ===== SECTION: GLASS_TINT_TOKENS =====
 /** Surface tint ranges (mapped from the 0..1 tint setting) and backdrop colour treatment. */
 object GlassTintTokens {
+    /** Cards and controls. Lite surfaces have no blur behind them, so they carry more tint. */
     fun surfaceAlphaRange(mode: GlassMode): ClosedFloatingPointRange<Float> = when (mode) {
         GlassMode.FULL -> 0.04f..0.62f
-        GlassMode.LITE -> 0.22f..0.82f
+        GlassMode.LITE -> 0.58f..0.92f
         GlassMode.OFF -> 1f..1f
     }
 
+    /** Floating chrome drawn without a backdrop (top buttons, undo bar). */
     fun chromeAlphaRange(mode: GlassMode): ClosedFloatingPointRange<Float> = when (mode) {
         GlassMode.FULL -> 0.10f..0.62f
-        GlassMode.LITE -> 0.30f..0.84f
+        GlassMode.LITE -> 0.68f..0.94f
         GlassMode.OFF -> 1f..1f
     }
+
+    /** Lite's prominent chrome over a blurred backdrop (navigation bar). */
+    val LiteBlurredChromeAlphaRange: ClosedFloatingPointRange<Float> = 0.30f..0.84f
 
     /** Dialogs carry long text, so their tint never drops below this. */
     const val DIALOG_MIN_ALPHA = 0.5f
 
-    /** Lite compensates for the missing refraction with stronger frost. */
+    /** Lite compensates for the missing refraction with stronger frost on its blurred surfaces. */
     const val LITE_BLUR_SCALE = 1.5f
 
     const val BACKDROP_SATURATION = 1.5f
@@ -306,3 +330,35 @@ fun BackdropEffectScope.glassColorControls(isDark: Boolean) {
     )
 }
 // ===== END SECTION: GLASS_TINT_TOKENS =====
+
+// ===== SECTION: GLASS_LITE_TOKENS =====
+/**
+ * Lightweight glass used by Lite for standard surfaces: a translucent vertical gradient, the
+ * surface's sheen band and a thin light-catching rim. Plain draw operations only, with no
+ * backdrop, blur, shader or offscreen layer.
+ */
+object GlassLiteTokens {
+    /** Bottom of the fill gradient relative to the top alpha, for a hint of depth. */
+    const val FILL_BOTTOM_FACTOR = 0.84f
+
+    /** Accent-tinted surfaces (primary buttons). */
+    const val TINT_TOP_ALPHA = 0.96f
+    const val TINT_BOTTOM_ALPHA = 0.86f
+
+    val RimWidth = 1.dp
+
+    /** Rim gradient, top to bottom: bright edge, softer sides, faint shade at the base. */
+    val RimLight = listOf(Color.White.copy(alpha = 0.95f), Color.White.copy(alpha = 0.40f), Color(0xFF0E1117).copy(alpha = 0.07f))
+    val RimDark = listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.09f), Color.White.copy(alpha = 0.04f))
+
+    /** Elevation of control thumbs (toggle, slider) when they are not Full glass lenses. */
+    val ThumbElevation = 2.dp
+
+    /** A pressed thumb frosts slightly instead of turning into a lens. */
+    const val THUMB_PRESSED_FROST = 0.22f
+
+    /** Subtle rim on the selected segment of segmented controls and the navigation bar. */
+    const val INDICATOR_RIM_ALPHA_LIGHT = 0.70f
+    const val INDICATOR_RIM_ALPHA_DARK = 0.14f
+}
+// ===== END SECTION: GLASS_LITE_TOKENS =====
