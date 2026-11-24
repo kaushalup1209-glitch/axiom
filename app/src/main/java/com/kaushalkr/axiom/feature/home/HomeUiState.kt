@@ -44,7 +44,9 @@ data class HomeDashboardUiState(
     val streak: StudyStreak,
     /** Real data: null until Distraction Shield tracking exists (Phase 06–07). */
     val distractionTodayMinutes: Int?,
-    /** PLACEHOLDER data: routine and tasks until the Planner exists (Phases 03–04). */
+    /** Real data: today's and overdue tasks from the task database. */
+    val tasks: HomeTaskSummary,
+    /** PLACEHOLDER data: the routine until routines exist (Phase 04). */
     val plannerPreview: PlannerPreview,
 ) {
     val goalProgress: Float

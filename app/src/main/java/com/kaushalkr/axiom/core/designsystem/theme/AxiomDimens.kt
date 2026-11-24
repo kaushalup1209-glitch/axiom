@@ -31,6 +31,9 @@ object AxiomDimens {
     /** Corner radius of compact stat tiles. */
     val tileCornerRadius = 24.dp
 
+    /** Corner radius of text inputs. */
+    val inputCornerRadius = 20.dp
+
     /** Corner radius of dialogs. */
     val dialogCornerRadius = 36.dp
 

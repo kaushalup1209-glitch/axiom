@@ -94,6 +94,8 @@ object GlassShapes {
     val Card: Shape = RoundedRectangle(AxiomDimens.cardCornerRadius)
     val Tile: Shape = RoundedRectangle(AxiomDimens.tileCornerRadius)
     val Dialog: Shape = RoundedRectangle(AxiomDimens.dialogCornerRadius)
+    val Input: Shape = RoundedRectangle(AxiomDimens.inputCornerRadius)
+    val Sheet: Shape = RoundedRectangle(AxiomDimens.dialogCornerRadius)
 }
 // ===== END SECTION: GLASS_SHAPE_TOKENS =====
 
@@ -154,6 +156,59 @@ object GlassTokens {
         sheenLight = 0.22f,
         sheenDark = 0.08f,
         depth = GlassDepth(radius = 12.dp, lightAlpha = 0.06f, darkAlpha = 0.20f),
+        shadow = Shadow.Default,
+        fallbackElevation = 8.dp,
+    )
+
+    /**
+     * Rows in long scrolling lists (task cards). Many are on screen and all redraw while
+     * scrolling, so this drops the two blur-based extras (drop shadow and inner depth shadow)
+     * and keeps the lens rim, rim light and sheen that carry the glass look.
+     */
+    val ListItem = GlassSurfaceSpec(
+        blurRadius = 4.dp,
+        refraction = GlassRefraction(height = 18.dp, amount = 34.dp, depthEffect = true),
+        edgeLight = GlassEdgeLight(width = 0.8.dp, intensity = 0.8f),
+        sheenLight = 0.18f,
+        sheenDark = 0.07f,
+        depth = null,
+        shadow = null,
+    )
+
+    /** Text inputs placed directly on the screen (search, task title). */
+    val Input = GlassSurfaceSpec(
+        blurRadius = 3.dp,
+        refraction = GlassRefraction(height = 14.dp, amount = 26.dp),
+        edgeLight = GlassEdgeLight(width = 0.8.dp, intensity = 0.75f),
+        sheenLight = 0.14f,
+        sheenDark = 0.06f,
+        depth = GlassDepth(radius = 8.dp, lightAlpha = 0.05f, darkAlpha = 0.18f),
+        shadow = null,
+    )
+
+    /**
+     * Bottom sheets (filters, sort, date and time pickers). Blurred more than dialogs, because
+     * a sheet covers busy content and holds dense controls such as the calendar grid.
+     */
+    val Sheet = GlassSurfaceSpec(
+        blurRadius = 16.dp,
+        refraction = GlassRefraction(height = 28.dp, amount = 56.dp, depthEffect = true),
+        edgeLight = GlassEdgeLight(width = 1.2.dp, intensity = 0.9f),
+        sheenLight = 0.22f,
+        sheenDark = 0.08f,
+        depth = GlassDepth(radius = 18.dp, lightAlpha = 0.07f, darkAlpha = 0.24f),
+        shadow = Shadow(radius = 32.dp, color = Color.Black.copy(alpha = 0.16f)),
+        fallbackElevation = 16.dp,
+    )
+
+    /** The floating undo snackbar. */
+    val Snackbar = GlassSurfaceSpec(
+        blurRadius = 6.dp,
+        refraction = GlassRefraction(height = 20.dp, amount = 36.dp, depthEffect = true),
+        edgeLight = GlassEdgeLight(width = 1.dp, intensity = 0.9f),
+        sheenLight = 0.22f,
+        sheenDark = 0.08f,
+        depth = GlassDepth(radius = 10.dp, lightAlpha = 0.06f, darkAlpha = 0.20f),
         shadow = Shadow.Default,
         fallbackElevation = 8.dp,
     )

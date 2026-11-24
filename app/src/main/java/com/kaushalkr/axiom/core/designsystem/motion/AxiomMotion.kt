@@ -100,6 +100,23 @@ object AxiomMotionTokens {
     // Progress rings and bars filling to a new value (critically damped, no overshoot)
     val ProgressFill = SpringSpecValues(dampingRatio = 1f, stiffness = 90f)
 
+    // Lists: items moving, appearing and disappearing
+    val ListPlacement = SpringSpecValues(dampingRatio = 0.9f, stiffness = 420f)
+    val ListFadeIn = TweenSpecValues(durationMillis = 220, easing = AxiomEasing.Standard)
+    val ListFadeOut = TweenSpecValues(durationMillis = 160, easing = AxiomEasing.Standard)
+    /** A dragged list item lifting off and settling back. */
+    val DragLift = SpringSpecValues(dampingRatio = 0.85f, stiffness = 600f)
+    const val DRAG_LIFT_SCALE = 1.03f
+
+    // Bottom sheets
+    val SheetIn = SpringSpecValues(dampingRatio = 0.9f, stiffness = 380f)
+    val SheetOut = TweenSpecValues(durationMillis = 200, easing = AxiomEasing.EmphasizedAccelerate)
+
+    // Undo snackbar
+    val SnackbarIn = SpringSpecValues(dampingRatio = 0.88f, stiffness = 460f)
+    val SnackbarOut = TweenSpecValues(durationMillis = 160, easing = AxiomEasing.EmphasizedAccelerate)
+    const val SNACKBAR_DURATION_MILLIS = 5_000L
+
     // Swapping one block of content for another (e.g. timer controls)
     val ContentSwapIn = TweenSpecValues(durationMillis = 220, delayMillis = 60, easing = AxiomEasing.EmphasizedDecelerate)
     val ContentSwapOut = TweenSpecValues(durationMillis = 120, easing = AxiomEasing.EmphasizedAccelerate)

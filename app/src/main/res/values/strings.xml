@@ -70,35 +70,160 @@
     <string name="home_routine_up_next">Up next</string>
     <string name="home_routine_detail">%1$s · %2$s</string>
     <string name="home_routine_preview_note">Sample routine. Your own arrives with the Planner in Phase 04.</string>
-    <string name="home_tasks_title">Upcoming tasks</string>
+    <string name="home_tasks_title">Today\'s tasks</string>
     <plurals name="home_tasks_progress">
         <item quantity="one">%1$d of %2$d done</item>
         <item quantity="other">%1$d of %2$d done</item>
     </plurals>
-    <string name="home_tasks_preview_note">Sample tasks. Your own arrive with the Planner in Phase 03.</string>
-    <string name="home_task_done">Done</string>
-    <string name="home_task_open">Not done</string>
+    <string name="home_tasks_add">Add task</string>
+    <string name="home_tasks_empty">Nothing due today. Add a task to plan your day.</string>
+    <string name="home_tasks_all_done">All done for today. Nice work.</string>
+    <plurals name="home_tasks_more">
+        <item quantity="one">+%1$d more in Planner</item>
+        <item quantity="other">+%1$d more in Planner</item>
+    </plurals>
+    <string name="home_tasks_open_planner">Open Planner</string>
 
     <string name="duration_minutes">%1$dm</string>
     <string name="duration_hours">%1$dh</string>
     <string name="duration_hours_minutes">%1$dh %2$dm</string>
     <!-- ===== END SECTION: STRINGS_HOME ===== -->
 
-    <!-- ===== SECTION: STRINGS_PLANNER ===== -->
-    <string name="planner_eyebrow">Plan</string>
-    <string name="planner_title">Planner</string>
-    <string name="planner_subtitle">Tasks, routines, subjects and exams in one calm place.</string>
-    <string name="planner_phase">Phases 03–04</string>
-    <string name="planner_hero_title">Plan with intent</string>
-    <string name="planner_hero_body">Prioritise tasks, build routines and keep every exam in view.</string>
-    <string-array name="planner_planned_features">
-        <item>To-do lists and task priorities</item>
-        <item>Daily, weekly and monthly routines</item>
-        <item>Subject and syllabus management</item>
-        <item>Exam countdowns and deadlines</item>
-        <item>Recurring tasks, reminders and rescheduling</item>
-    </string-array>
-    <!-- ===== END SECTION: STRINGS_PLANNER ===== -->
+    <!-- ===== SECTION: STRINGS_TASKS_LIST ===== -->
+    <string name="tasks_eyebrow">Planner</string>
+    <string name="tasks_title">Tasks</string>
+    <string name="tasks_new">New task</string>
+    <string name="tasks_search_placeholder">Search tasks</string>
+    <string name="action_clear_search">Clear search</string>
+    <plurals name="tasks_summary_today">
+        <item quantity="one">%1$d task due today</item>
+        <item quantity="other">%1$d tasks due today</item>
+    </plurals>
+    <plurals name="tasks_summary_overdue">
+        <item quantity="one">%1$d overdue</item>
+        <item quantity="other">%1$d overdue</item>
+    </plurals>
+    <string name="tasks_summary_joined">%1$s · %2$s</string>
+    <string name="tasks_summary_clear">Nothing due today.</string>
+
+    <string name="view_today">Today</string>
+    <string name="view_upcoming">Upcoming</string>
+    <string name="view_overdue">Overdue</string>
+    <string name="view_completed">Done</string>
+    <string name="section_tomorrow">Tomorrow</string>
+    <string name="section_yesterday">Yesterday</string>
+    <string name="section_no_date">No date</string>
+
+    <string name="tasks_empty_today_title">Nothing due today</string>
+    <string name="tasks_empty_today_body">Add a task for today, or enjoy the free time.</string>
+    <string name="tasks_empty_upcoming_title">Nothing planned ahead</string>
+    <string name="tasks_empty_upcoming_body">Tasks with a later date, or no date, appear here.</string>
+    <string name="tasks_empty_overdue_title">You\'re all caught up</string>
+    <string name="tasks_empty_overdue_body">Nothing is past its deadline.</string>
+    <string name="tasks_empty_completed_title">No finished tasks yet</string>
+    <string name="tasks_empty_completed_body">Tasks you complete appear here, newest first.</string>
+    <string name="tasks_empty_search_title">No matching tasks</string>
+    <string name="tasks_empty_search_body">Try another word or clear the filters.</string>
+    <!-- ===== END SECTION: STRINGS_TASKS_LIST ===== -->
+
+    <!-- ===== SECTION: STRINGS_TASKS_ROW ===== -->
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+    <string name="priority_urgent">Urgent</string>
+    <string name="priority_description">%1$s priority</string>
+    <string name="recurrence_none">Never</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_weekdays">Weekdays</string>
+    <string name="recurrence_weekly">Weekly</string>
+    <string name="recurrence_monthly">Monthly</string>
+    <string name="task_due_today_at">Today, %1$s</string>
+    <string name="task_due_tomorrow_at">Tomorrow, %1$s</string>
+    <string name="task_due_date_at">%1$s, %2$s</string>
+    <plurals name="task_overdue_days">
+        <item quantity="one">%1$d day overdue</item>
+        <item quantity="other">%1$d days overdue</item>
+    </plurals>
+    <string name="task_subtasks_progress">%1$d/%2$d</string>
+    <string name="task_checkbox_complete">Mark “%1$s” as done</string>
+    <string name="task_checkbox_reopen">Mark “%1$s” as not done</string>
+    <string name="task_action_complete">Complete</string>
+    <string name="task_action_reopen">Reopen</string>
+    <string name="task_action_delete">Delete</string>
+    <string name="task_action_move_up">Move up</string>
+    <string name="task_action_move_down">Move down</string>
+    <!-- ===== END SECTION: STRINGS_TASKS_ROW ===== -->
+
+    <!-- ===== SECTION: STRINGS_TASKS_FILTER_SORT ===== -->
+    <string name="tasks_filter">Filter</string>
+    <plurals name="tasks_filter_active">
+        <item quantity="one">Filter, %1$d active</item>
+        <item quantity="other">Filter, %1$d active</item>
+    </plurals>
+    <string name="tasks_sort">Sort</string>
+    <string name="tasks_sort_current">Sort: %1$s</string>
+    <string name="sheet_close">Close</string>
+    <string name="filter_priority">Priority</string>
+    <string name="filter_subject">Subject</string>
+    <string name="filter_any_subject">Any subject</string>
+    <string name="filter_clear">Clear</string>
+    <string name="filter_done">Done</string>
+    <string name="sort_manual">My order</string>
+    <string name="sort_due">Deadline</string>
+    <string name="sort_priority">Priority</string>
+    <string name="sort_created">Newest first</string>
+    <string name="sort_title">Title (A–Z)</string>
+    <string name="sort_reorder_hint">In My order, touch and hold a task, then drag it to reorder.</string>
+    <!-- ===== END SECTION: STRINGS_TASKS_FILTER_SORT ===== -->
+
+    <!-- ===== SECTION: STRINGS_TASKS_UNDO ===== -->
+    <string name="action_undo">Undo</string>
+    <string name="undo_task_completed">Completed “%1$s”</string>
+    <string name="undo_task_completed_repeating">Completed “%1$s”. Next one scheduled.</string>
+    <string name="undo_task_deleted">Deleted “%1$s”</string>
+    <!-- ===== END SECTION: STRINGS_TASKS_UNDO ===== -->
+
+    <!-- ===== SECTION: STRINGS_TASK_EDITOR ===== -->
+    <string name="editor_title_new">New task</string>
+    <string name="editor_title_edit">Edit task</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_delete">Delete task</string>
+    <string name="editor_title_label">Task title</string>
+    <string name="editor_title_placeholder">What needs doing?</string>
+    <string name="editor_description_label">Description</string>
+    <string name="editor_description_placeholder">Notes (optional)</string>
+    <string name="editor_subject_label">Subject</string>
+    <string name="editor_subject_placeholder">Subject (optional)</string>
+    <string name="editor_deadline">Deadline</string>
+    <string name="editor_date_none">No date</string>
+    <string name="editor_date_next_week">Next week</string>
+    <string name="editor_date_pick">Pick date</string>
+    <string name="editor_date_sheet_title">Pick a date</string>
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="editor_time">Time</string>
+    <string name="editor_time_any">Any time</string>
+    <string name="editor_time_pick">Add time</string>
+    <string name="editor_time_sheet_title">Pick a time</string>
+    <string name="editor_time_set">Set time</string>
+    <string name="editor_repeat">Repeat</string>
+    <string name="editor_repeat_hint">Completing it schedules the next one automatically.</string>
+    <string name="editor_priority_effort">Priority and effort</string>
+    <string name="editor_estimate">Estimated time</string>
+    <string name="editor_estimate_none">None</string>
+    <string name="editor_subtasks">Subtasks</string>
+    <string name="editor_subtask_placeholder">Add a step</string>
+    <string name="editor_subtask_add">Add subtask</string>
+    <string name="editor_subtask_remove">Remove “%1$s”</string>
+    <plurals name="editor_subtask_limit">
+        <item quantity="one">A task can have up to %1$d subtask.</item>
+        <item quantity="other">A task can have up to %1$d subtasks.</item>
+    </plurals>
+    <string name="dialog_discard_title">Discard changes?</string>
+    <string name="dialog_discard_message">Your edits to this task will be lost.</string>
+    <string name="dialog_discard_confirm">Discard</string>
+    <string name="dialog_discard_keep">Keep editing</string>
+    <!-- ===== END SECTION: STRINGS_TASK_EDITOR ===== -->
 
     <!-- ===== SECTION: STRINGS_FOCUS ===== -->
     <string name="focus_eyebrow">Study</string>

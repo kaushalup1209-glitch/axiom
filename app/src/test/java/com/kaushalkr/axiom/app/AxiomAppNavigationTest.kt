@@ -34,7 +34,7 @@ class AxiomAppNavigationTest {
 
     private val heroTitles = mapOf(
         TopLevelDestination.HOME to R.string.home_goal_title,
-        TopLevelDestination.PLANNER to R.string.planner_hero_title,
+        TopLevelDestination.PLANNER to R.string.tasks_title,
         TopLevelDestination.FOCUS to R.string.focus_hero_title,
         TopLevelDestination.INSIGHTS to R.string.insights_hero_title,
         TopLevelDestination.ASSISTANT to R.string.assistant_hero_title,

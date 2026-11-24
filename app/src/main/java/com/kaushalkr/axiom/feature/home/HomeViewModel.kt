@@ -11,10 +11,14 @@ import com.kaushalkr.axiom.core.data.focus.FocusSessionRepository
 import com.kaushalkr.axiom.core.data.sample.PlannerPreview
 import com.kaushalkr.axiom.core.data.sample.PlannerPreviewData
 import com.kaushalkr.axiom.core.data.study.StudyPreferencesRepository
+import com.kaushalkr.axiom.core.data.task.TaskRepository
 import com.kaushalkr.axiom.core.domain.StudyStreakCalculator
+import com.kaushalkr.axiom.core.domain.task.TaskActions
 import com.kaushalkr.axiom.core.model.ActiveFocusSession
 import com.kaushalkr.axiom.core.model.StudyDefaults
 import com.kaushalkr.axiom.core.platform.TimeProvider
+import com.kaushalkr.axiom.feature.tasks.TaskListItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
@@ -40,6 +45,8 @@ import java.time.LocalDateTime
 class HomeViewModel(
     private val studyPreferences: StudyPreferencesRepository,
     private val focusSessions: FocusSessionRepository,
+    private val tasks: TaskRepository,
+    private val taskActions: TaskActions,
     private val timeProvider: TimeProvider,
     private val plannerPreview: PlannerPreview = PlannerPreviewData.Default,
 ) : ViewModel() {
@@ -55,6 +62,14 @@ class HomeViewModel(
     private val dailyTotals = todayFlow.flatMapLatest { today ->
         focusSessions.dailyFocusTotals(sinceDate = today.minusDays(STREAK_LOOKBACK_DAYS))
     }
+
+    private val taskSummary = todayFlow.flatMapLatest { today ->
+        combine(tasks.openTasks, tasks.completedSince(today)) { open, completedToday ->
+            HomeTaskSummary.from(open, completedToday, today)
+        }
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
     // ===== END SECTION: HOME_VM_TIME =====
 
     // ===== SECTION: HOME_VM_DASHBOARD =====
@@ -63,7 +78,8 @@ class HomeViewModel(
         studyPreferences.preferences,
         dailyTotals,
         focusSessions.activeSession,
-    ) { now, preferences, totals, active ->
+        taskSummary,
+    ) { now, preferences, totals, active, taskSummary ->
         val dateTime = localDateTime(now)
         val today = dateTime.toLocalDate()
         val liveTodayMillis = (totals[today] ?: 0L) + (active?.focusedMillis(now) ?: 0L)
@@ -81,6 +97,7 @@ class HomeViewModel(
                 minimumMillis = StudyDefaults.STREAK_MINIMUM_MINUTES * MINUTE_MILLIS,
             ),
             distractionTodayMinutes = null,
+            tasks = taskSummary,
             plannerPreview = plannerPreview,
         )
     }
@@ -148,6 +165,13 @@ class HomeViewModel(
     }
     // ===== END SECTION: HOME_VM_QUICK_FOCUS =====
 
+    // ===== SECTION: HOME_VM_TASKS =====
+    /** Completes (with undo) or reopens a task from the dashboard. */
+    fun onToggleTask(item: TaskListItem) {
+        if (item.isCompleted) taskActions.reopen(item.id) else taskActions.complete(item.id, item.title)
+    }
+    // ===== END SECTION: HOME_VM_TASKS =====
+
     // ===== SECTION: HOME_VM_HELPERS =====
     private fun localDateTime(epochMillis: Long): LocalDateTime =
         LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), timeProvider.zone())
@@ -176,6 +200,8 @@ class HomeViewModel(
                 HomeViewModel(
                     studyPreferences = container.studyPreferencesRepository,
                     focusSessions = container.focusSessionRepository,
+                    tasks = container.taskRepository,
+                    taskActions = container.taskActions,
                     timeProvider = container.timeProvider,
                 )
             }

@@ -27,13 +27,17 @@ import com.kaushalkr.axiom.feature.home.components.QuickFocusCard
 import com.kaushalkr.axiom.feature.home.components.StreakCard
 import com.kaushalkr.axiom.feature.home.components.StudyStatTile
 import com.kaushalkr.axiom.feature.home.components.TodayRoutineCard
-import com.kaushalkr.axiom.feature.home.components.UpcomingTasksCard
+import com.kaushalkr.axiom.feature.home.components.TodayTasksCard
+import com.kaushalkr.axiom.feature.tasks.TaskListItem
 
 // ===== SECTION: HOME_ROUTE =====
 /** Stateful entry point: connects [HomeViewModel] to the stateless [HomeScreen]. */
 @Composable
 fun HomeDashboardRoute(
     onOpenDistractionShield: () -> Unit,
+    onOpenPlanner: () -> Unit,
+    onOpenTask: (taskId: Long) -> Unit,
+    onAddTask: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
@@ -59,6 +63,10 @@ fun HomeDashboardRoute(
         onResumeFocus = viewModel::onResumeFocus,
         onFinishFocus = viewModel::onFinishFocus,
         onOpenDistractionShield = onOpenDistractionShield,
+        onToggleTask = viewModel::onToggleTask,
+        onOpenTask = onOpenTask,
+        onAddTask = onAddTask,
+        onOpenPlanner = onOpenPlanner,
         modifier = modifier,
     )
     }
@@ -81,6 +89,10 @@ fun HomeScreen(
     onResumeFocus: () -> Unit,
     onFinishFocus: () -> Unit,
     onOpenDistractionShield: () -> Unit,
+    onToggleTask: (TaskListItem) -> Unit,
+    onOpenTask: (Long) -> Unit,
+    onAddTask: () -> Unit,
+    onOpenPlanner: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isWide = LocalAxiomWidthClass.current.isWide
@@ -108,15 +120,19 @@ fun HomeScreen(
     }
     val planColumn: @Composable (Modifier) -> Unit = { columnModifier ->
         Column(modifier = columnModifier, verticalArrangement = Arrangement.spacedBy(AxiomSpacing.lg)) {
+            TodayTasksCard(
+                summary = dashboard.tasks,
+                today = dashboard.today,
+                onToggleTask = onToggleTask,
+                onOpenTask = onOpenTask,
+                onAddTask = onAddTask,
+                onOpenPlanner = onOpenPlanner,
+                modifier = Modifier.fillMaxWidth(),
+            )
             StreakCard(streak = dashboard.streak, modifier = Modifier.fillMaxWidth())
             TodayRoutineCard(
                 routine = dashboard.plannerPreview.routine,
                 currentTime = dashboard.currentTime,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            UpcomingTasksCard(
-                tasks = dashboard.plannerPreview.tasks,
-                completedCount = dashboard.plannerPreview.completedTasks,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

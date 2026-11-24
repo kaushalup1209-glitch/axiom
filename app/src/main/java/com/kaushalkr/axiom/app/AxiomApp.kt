@@ -1,7 +1,9 @@
 package com.kaushalkr.axiom.app
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -32,10 +35,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.kaushalkr.axiom.AxiomApplication
+import com.kaushalkr.axiom.core.designsystem.components.GlassUndoSnackbarHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -86,6 +93,9 @@ fun AxiomApp(
     val backgroundBackdrop = rememberLayerBackdrop()
     val screenBackdrop = rememberLayerBackdrop()
     val overlayHostState = remember { GlassOverlayHostState() }
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val context = LocalContext.current
+    val undoController = remember(context) { (context.applicationContext as AxiomApplication).container.undoController }
 
     // ===== SECTION: APP_ROOT_NAV_STATE =====
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -159,7 +169,8 @@ fun AxiomApp(
                     isTopLevel = isTopLevel,
                     onOpenDistractionShield = { navController.navigateToDistractionShield() },
                     onOpenSettings = { navController.navigateToSettings() },
-                    onNavigateBack = { navController.navigateUp() },
+                    // Through the back dispatcher, so screens can intercept it (e.g. unsaved edits).
+                    onNavigateBack = { backDispatcher?.onBackPressed() ?: navController.navigateUp() },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .then(underlyingSemantics)
@@ -191,6 +202,27 @@ fun AxiomApp(
                             .fillMaxWidth(),
                     )
                 }
+
+                // ===== SECTION: APP_ROOT_UNDO_SNACKBAR =====
+                val snackbarBottom by animateDpAsState(
+                    targetValue = navigationBarBottom + if (isTopLevel) {
+                        AxiomDimens.navigationBarHeight + AxiomDimens.navigationBarBottomGap + AxiomSpacing.sm
+                    } else {
+                        AxiomSpacing.md
+                    },
+                    animationSpec = motion.spring(AxiomMotionTokens.ChromeShow, Dp.VisibilityThreshold),
+                    label = "SnackbarBottom",
+                )
+                GlassUndoSnackbarHost(
+                    undoController = undoController,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .then(underlyingSemantics)
+                        .padding(start = safeStart + AxiomSpacing.md, end = safeEnd + AxiomSpacing.md)
+                        .padding(bottom = snackbarBottom)
+                        .imePadding(),
+                )
+                // ===== END SECTION: APP_ROOT_UNDO_SNACKBAR =====
 
                 GlassOverlayHost(
                     state = overlayHostState,

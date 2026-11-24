@@ -9,10 +9,20 @@ Package: `com.kaushalkr.axiom`.
 
 - **Phase 01** (foundation and Liquid Glass design system): complete.
 - **Phase 02** (Home dashboard): complete. Greeting and date, daily goal ring, quick-start focus
-  timer, study time, streak and Distraction Shield access use real data. Today's routine and
-  upcoming tasks show clearly labelled **Preview** sample data until Phases 03–04; distraction
-  time shows "Not tracked" until Phase 06.
-- Planner, Focus, Insights, AI and Distraction Shield are placeholders naming their phase.
+  timer, study time, streak and Distraction Shield access use real data. Today's routine shows
+  clearly labelled **Preview** sample data until Phase 04; distraction time shows "Not tracked"
+  until Phase 06.
+- **Phase 03** (tasks): complete. The Planner tab is a task list stored offline in Room:
+  - create, edit, delete and complete tasks with title, description, subject, deadline (date and
+    optional time), estimated duration, priority (Low, Medium, High, Urgent), subtasks and repeat
+    (daily, weekdays, weekly, monthly; completing schedules the next one);
+  - Today, Upcoming, Overdue and Done views; search, priority and subject filters, five sorts;
+  - swipe right to complete, swipe left to delete, long-press drag to reorder (in "My order");
+  - undo for every deletion and completion from a Liquid Glass snackbar;
+  - Home's "Today's tasks" card uses real data (overdue and due today, progress, tick to complete);
+  - `TaskCommand` / `TaskCommandExecutor` expose the same operations as structured, JSON-ready
+    commands for the AI assistant (Phase 11).
+- Focus, Insights, AI and Distraction Shield are placeholders naming their phase.
 
 ## Tech stack
 
@@ -21,11 +31,11 @@ Package: `com.kaushalkr.axiom`.
 | Language / UI | Kotlin 2.4.21, Jetpack Compose (BOM 2026.11.01, Compose 1.13, Material 3 1.5) |
 | Architecture | MVVM, manual DI (`AppContainer`), feature packages |
 | Navigation | Navigation Compose 2.10 with type-safe routes |
-| Storage | DataStore Preferences 1.3 (settings, active focus session), Room 2.8 + KSP (focus history) |
+| Storage | DataStore Preferences 1.3 (settings, active focus session), Room 2.8 + KSP (focus history, tasks) |
 | Liquid Glass | Kyant0 Backdrop 2.0.1 + Shapes 1.2.1 |
 | Build | AGP 9.5.2 (built-in Kotlin), Gradle 9.9.2, JDK 17+ (21 used here) |
 | SDK | minSdk 26, targetSdk 37, compileSdk 37.2 |
-| Tests | JUnit 4, Robolectric 4.18.1, Compose UI test |
+| Tests | JUnit 4, Robolectric 4.18.1, Compose UI test, kotlinx-serialization-json (tests only) |
 
 UsageStatsManager, SpeechRecognizer and the AI client are planned for their phases and are not
 added yet.

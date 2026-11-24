@@ -30,6 +30,8 @@ import com.kyant.shapes.RoundedRectangle
 /**
  * Single-line inset text field for use inside glass cards. Deliberately not glass itself, to
  * avoid stacking another glass layer on the card. Observe [state] for changes.
+ *
+ * @param onImeAction runs on the keyboard's Done key; by default Done just closes the keyboard.
  */
 @Composable
 fun AxiomTextField(
@@ -39,6 +41,7 @@ fun AxiomTextField(
     modifier: Modifier = Modifier,
     maxLength: Int = Int.MAX_VALUE,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.Words,
+    onImeAction: (() -> Unit)? = null,
 ) {
     val colors = AxiomTheme.colors
     val focusManager = LocalFocusManager.current
@@ -50,7 +53,7 @@ fun AxiomTextField(
         inputTransformation = InputTransformation.maxLengthTrim(maxLength),
         textStyle = AxiomTheme.typography.bodyLarge.copy(color = colors.textPrimary),
         keyboardOptions = KeyboardOptions(capitalization = capitalization, imeAction = ImeAction.Done),
-        onKeyboardAction = { focusManager.clearFocus() },
+        onKeyboardAction = { onImeAction?.invoke() ?: focusManager.clearFocus() },
         lineLimits = TextFieldLineLimits.SingleLine,
         cursorBrush = SolidColor(colors.accent),
         decorator = TextFieldDecorator { innerTextField ->

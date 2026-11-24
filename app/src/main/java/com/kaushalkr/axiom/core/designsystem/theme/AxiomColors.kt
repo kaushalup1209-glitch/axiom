@@ -38,6 +38,12 @@ data class AxiomColors(
     val pressOverlay: Color,
     /** Fine dot texture in the ambient background; makes refraction visible at rest. */
     val backgroundTexture: Color,
+    val priorityLow: Color,
+    val priorityMedium: Color,
+    val priorityHigh: Color,
+    val priorityUrgent: Color,
+    /** Swipe-to-complete background. */
+    val success: Color,
 )
 // ===== END SECTION: AXIOM_COLORS_MODEL =====
 
@@ -65,6 +71,11 @@ val LightAxiomColors = AxiomColors(
     scrim = Color(0x47202238),
     pressOverlay = Color(0x0F0E1117),
     backgroundTexture = Color(0x1A3A3F8F),
+    priorityLow = Color(0xFF7D8696),
+    priorityMedium = Color(0xFF2F80ED),
+    priorityHigh = Color(0xFFD97706),
+    priorityUrgent = Color(0xFFE5484D),
+    success = Color(0xFF16A34A),
 )
 // ===== END SECTION: AXIOM_COLORS_LIGHT =====
 
@@ -92,6 +103,11 @@ val DarkAxiomColors = AxiomColors(
     scrim = Color(0x80000000),
     pressOverlay = Color(0x1AFFFFFF),
     backgroundTexture = Color(0x17C7CCFF),
+    priorityLow = Color(0xFF8E97A8),
+    priorityMedium = Color(0xFF5AA9FF),
+    priorityHigh = Color(0xFFFFB347),
+    priorityUrgent = Color(0xFFFF6B6B),
+    success = Color(0xFF34D399),
 )
 // ===== END SECTION: AXIOM_COLORS_DARK =====
 

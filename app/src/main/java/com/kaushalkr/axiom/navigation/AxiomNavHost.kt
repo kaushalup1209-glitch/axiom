@@ -17,6 +17,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
@@ -27,6 +28,7 @@ import com.kaushalkr.axiom.feature.insights.InsightsScreen
 import com.kaushalkr.axiom.feature.planner.PlannerScreen
 import com.kaushalkr.axiom.feature.settings.SettingsRoute
 import com.kaushalkr.axiom.feature.shield.DistractionShieldScreen
+import com.kaushalkr.axiom.feature.tasks.editor.TaskEditorScreenRoute
 
 // ===== SECTION: NAV_HOST =====
 /**
@@ -61,9 +63,19 @@ fun AxiomNavHost(
     ) {
         // ===== SECTION: NAV_HOST_TOP_LEVEL =====
         composable<HomeRoute> {
-            HomeDashboardRoute(onOpenDistractionShield = { navController.navigateToDistractionShield() })
+            HomeDashboardRoute(
+                onOpenDistractionShield = { navController.navigateToDistractionShield() },
+                onOpenPlanner = { navController.navigateToTopLevel(TopLevelDestination.PLANNER) },
+                onOpenTask = { taskId -> navController.navigateToTaskEditor(taskId) },
+                onAddTask = { navController.navigateToTaskEditor(dueToday = true) },
+            )
         }
-        composable<PlannerRoute> { PlannerScreen() }
+        composable<PlannerRoute> {
+            PlannerScreen(
+                onOpenTask = { taskId -> navController.navigateToTaskEditor(taskId) },
+                onNewTask = { dueToday -> navController.navigateToTaskEditor(dueToday = dueToday) },
+            )
+        }
         composable<FocusRoute> { FocusScreen() }
         composable<InsightsRoute> { InsightsScreen() }
         composable<AssistantRoute> { AssistantScreen() }
@@ -72,6 +84,15 @@ fun AxiomNavHost(
         // ===== SECTION: NAV_HOST_SECONDARY =====
         composable<DistractionShieldRoute> { DistractionShieldScreen() }
         composable<SettingsRoute> { SettingsRoute() }
+        composable<TaskEditorRoute> { entry ->
+            val route = entry.toRoute<TaskEditorRoute>()
+            TaskEditorScreenRoute(
+                taskId = route.taskId,
+                dueToday = route.dueToday,
+                // Pop only while this editor is on top, so a late event can never pop twice.
+                onClose = { if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack() },
+            )
+        }
         // ===== END SECTION: NAV_HOST_SECONDARY =====
     }
 }
@@ -142,5 +163,10 @@ fun NavHostController.navigateToSettings() {
 
 fun NavHostController.navigateToDistractionShield() {
     navigate(DistractionShieldRoute) { launchSingleTop = true }
+}
+
+/** Opens the task editor; [taskId] 0 creates a task. */
+fun NavHostController.navigateToTaskEditor(taskId: Long = 0L, dueToday: Boolean = false) {
+    navigate(TaskEditorRoute(taskId = taskId, dueToday = dueToday)) { launchSingleTop = true }
 }
 // ===== END SECTION: NAV_CONTROLLER_EXTENSIONS =====

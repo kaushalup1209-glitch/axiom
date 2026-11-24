@@ -9,10 +9,17 @@ import com.kaushalkr.axiom.core.data.appearance.AppearanceRepository
 import com.kaushalkr.axiom.core.data.database.AxiomDatabase
 import com.kaushalkr.axiom.core.data.focus.FocusSessionRepository
 import com.kaushalkr.axiom.core.data.study.StudyPreferencesRepository
+import com.kaushalkr.axiom.core.data.task.TaskRepository
+import com.kaushalkr.axiom.core.domain.UndoController
+import com.kaushalkr.axiom.core.domain.task.TaskActions
+import com.kaushalkr.axiom.core.domain.task.TaskCommandExecutor
 import com.kaushalkr.axiom.core.platform.GlassDeviceCapability
 import com.kaushalkr.axiom.core.platform.PowerSaveModeMonitor
 import com.kaushalkr.axiom.core.platform.SystemTimeProvider
 import com.kaushalkr.axiom.core.platform.TimeProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 // ===== SECTION: APP_CONTAINER_DATASTORE =====
 private val Context.appearanceDataStore: DataStore<Preferences> by preferencesDataStore(
@@ -35,6 +42,9 @@ class AppContainer(context: Context) {
 
     private val appContext = context.applicationContext
 
+    /** App-lifetime scope for writes that must finish even if the screen that started them closes. */
+    val applicationScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     val timeProvider: TimeProvider by lazy { SystemTimeProvider() }
 
     val appearanceRepository: AppearanceRepository by lazy {
@@ -52,6 +62,15 @@ class AppContainer(context: Context) {
     val focusSessionRepository: FocusSessionRepository by lazy {
         FocusSessionRepository(database.focusSessionDao(), appContext.focusStateDataStore, timeProvider)
     }
+
+    val taskRepository: TaskRepository by lazy { TaskRepository(database, timeProvider) }
+
+    val undoController: UndoController by lazy { UndoController(applicationScope) }
+
+    val taskActions: TaskActions by lazy { TaskActions(taskRepository, undoController, applicationScope) }
+
+    /** Entry point for the AI assistant (Phase 11) to run structured task commands. */
+    val taskCommandExecutor: TaskCommandExecutor by lazy { TaskCommandExecutor(taskRepository, taskActions) }
 
     val powerSaveModeMonitor: PowerSaveModeMonitor by lazy {
         PowerSaveModeMonitor(appContext)

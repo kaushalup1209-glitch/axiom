@@ -27,4 +27,13 @@ data object DistractionShieldRoute
 
 @Serializable
 data object SettingsRoute
+
+/**
+ * Task editor. [taskId] 0 creates a new task; [dueToday] pre-fills today's date for a new one.
+ */
+@Serializable
+data class TaskEditorRoute(
+    val taskId: Long = 0L,
+    val dueToday: Boolean = false,
+)
 // ===== END SECTION: NAV_SECONDARY_ROUTES =====

@@ -15,15 +15,24 @@ com.kaushalkr.axiom
 │   ├── AxiomApp.kt                  Root layout: captured screen, floating chrome, overlay host
 │   └── MainActivityViewModel.kt     Settings + Battery Saver + device caps → GlassResolution
 ├── core/
-│   ├── di/AppContainer.kt           Manual DI (DataStore, Room, repositories, monitors, time)
-│   ├── model/                       AppearanceSettings, StudyPreferences + StudyDefaults, FocusSession
-│   ├── domain/StudyStreakCalculator.kt   Pure streak rules
+│   ├── di/AppContainer.kt           Manual DI (DataStore, Room, repositories, task actions, undo, time)
+│   ├── model/                       AppearanceSettings, StudyPreferences + StudyDefaults, FocusSession,
+│   │                                Task (+ TaskPriority, TaskRecurrence, Subtask, TaskDraft, TaskLimits)
+│   ├── domain/
+│   │   ├── StudyStreakCalculator.kt   Pure streak rules
+│   │   ├── UndoController.kt          App-wide undo events shown by GlassUndoSnackbarHost
+│   │   └── task/
+│   │       ├── TaskActions.kt             Complete / reopen / delete / move / save, with undo, in the app scope
+│   │       ├── TaskRecurrenceCalculator.kt   Next due date for repeating tasks (missed ones skipped)
+│   │       ├── TaskCommand.kt             AI-ready commands + TaskCommandExecutor + TaskSummary
+│   │       └── TaskDraftMapping.kt        Task → editable TaskDraft
 │   ├── data/
 │   │   ├── appearance/AppearanceRepository.kt   Theme, glass, tint, motion preferences
 │   │   ├── study/StudyPreferencesRepository.kt  Name, daily goal, quick-start length
 │   │   ├── focus/                   FocusSessionRepository (active session in DataStore, history in Room), entity, DAO
-│   │   ├── database/AxiomDatabase.kt   Room database (schemas exported to app/schemas)
-│   │   └── sample/PlannerPreviewData.kt   PLACEHOLDER routine/tasks until Phases 03–04
+│   │   ├── task/                    TaskRepository, TaskDao, TaskEntity / SubtaskEntity
+│   │   ├── database/AxiomDatabase.kt   Room database v2 (schemas exported to app/schemas)
+│   │   └── sample/PlannerPreviewData.kt   PLACEHOLDER routine until Phase 04
 │   ├── platform/
 │   │   ├── GlassDeviceCapability.kt  API level, low-RAM flag and total memory
 │   │   ├── PowerSaveModeMonitor.kt   Battery Saver as a Flow
@@ -46,13 +55,15 @@ com.kaushalkr.axiom
 │   │   └── components/               One reusable component per file:
 │   │       GlassCard, GlassButton, GlassIconButton, GlassToggle, GlassSlider,
 │   │       GlassTabRow, GlassTab, GlassSegmentedControl, GlassDialog, GlassOverlayHost,
+│   │       GlassBottomSheet, GlassTextField, GlassSearchField, GlassUndoSnackbarHost,
 │   │       AxiomBackground, AxiomScreenColumn, ScreenHeader, AxiomIconBadge, AxiomPill,
-│   │       StatusBarScrim
+│   │       AxiomChip, AxiomTextField, AxiomMonthCalendar, StatusBarScrim
 │   └── ui/                           App-specific shared UI
 │       ├── FeaturePlaceholderScreen.kt   Phase 01 placeholder layout
+│       ├── reorder/ReorderableListState.kt   Long-press drag-to-reorder for LazyColumn
 │       └── AxiomAppMark.kt
 ├── navigation/
-│   ├── AxiomRoutes.kt               Type-safe @Serializable routes
+│   ├── AxiomRoutes.kt               Type-safe @Serializable routes (incl. TaskEditorRoute)
 │   ├── TopLevelDestination.kt       Five tabs: label, icon, route
 │   ├── AxiomNavHost.kt              Graph, transitions, navigate helpers
 │   ├── AxiomNavigationBar.kt        Floating Liquid Glass tab bar
@@ -61,10 +72,23 @@ com.kaushalkr.axiom
     ├── home/
     │   ├── HomeScreen.kt             HomeDashboardRoute (stateful) + HomeScreen (stateless)
     │   ├── HomeViewModel.kt          Minute-tick dashboard state, second-tick focus clock
-    │   ├── HomeUiState.kt, HomeFormatting.kt
+    │   ├── HomeUiState.kt, HomeFormatting.kt, HomeTaskSummary.kt (real task stats)
     │   └── components/               DailyGoalCard, QuickFocusCard, StudyStatTile, StreakCard,
-    │                                 TodayRoutineCard, UpcomingTasksCard, HomeCardHeader
-    ├── planner/PlannerScreen.kt
+    │                                 TodayRoutineCard, TodayTasksCard, HomeCardHeader
+    ├── planner/PlannerScreen.kt      Planner tab; hosts the task list
+    ├── tasks/
+    │   ├── TasksScreen.kt            TaskListRoute (stateful) + TasksScreen: fixed header over a LazyColumn
+    │   ├── TasksViewModel.kt         View, search, filter, sort; list built off the main thread
+    │   ├── TaskListModels.kt, TaskListBuilder.kt, TaskListReorder.kt, TaskFormatting.kt
+    │   ├── components/               TasksHeader, TaskList, TaskCard, SwipeableTaskItem,
+    │   │                             TaskCompletionCheck, TaskSectionHeader, TasksEmptyState,
+    │   │                             TaskFilterSheet, TaskSortSheet
+    │   └── editor/
+    │       ├── TaskEditorScreen.kt   TaskEditorScreenRoute: form, sheets, discard dialog
+    │       ├── TaskEditorViewModel.kt
+    │       └── components/           EditorSectionCard, EditorFieldLabel, TaskDeadlineCard,
+    │                                 TaskPriorityEffortCard, TaskSubtasksCard, SubjectSuggestions,
+    │                                 TaskDateSheet, TaskTimeSheet
     ├── focus/FocusScreen.kt
     ├── insights/InsightsScreen.kt
     ├── assistant/AssistantScreen.kt          (AI tab)
@@ -85,8 +109,8 @@ The app root (`AxiomApp`) stacks three layers:
 1. **Captured screen**: `AxiomBackground` (captured into `backgroundBackdrop`) and the
    `NavHost`. The whole layer is captured into `screenBackdrop`.
 2. **Status bar scrim.**
-3. **Floating chrome and overlays**: top actions, navigation bar and dialogs draw
-   `screenBackdrop`, so they refract the content scrolling beneath them.
+3. **Floating chrome and overlays**: top actions, navigation bar, the undo snackbar, dialogs and
+   bottom sheets draw `screenBackdrop`, so they refract the content scrolling beneath them.
 
 Rules that keep this correct:
 
@@ -106,7 +130,8 @@ Rules that keep this correct:
 ### Where to tune
 
 - **Glass look:** `GlassTokens.kt`. One `GlassSurfaceSpec` per surface kind (`Card`, `Dialog`,
-  `Button`, `FloatingButton`, `NavigationBar`, `SegmentedControl`), plus indicator, thumb, press,
+  `Button`, `FloatingButton`, `NavigationBar`, `ListItem`, `Input`, `Sheet`, `Snackbar`,
+  `SegmentedControl`), plus indicator, thumb, press,
   background-texture and tint tokens. Components never hard-code glass values.
 - **Motion:** `AxiomMotionTokens` in `AxiomMotion.kt`. Every spring and tween is defined there at
   1x. `AxiomMotion` scales them by the Settings animation scale (tween durations × scale, spring
@@ -130,6 +155,17 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
 - **Focus timing** is derived from stored timestamps (`ActiveFocusSession`), so it stays exact in
   the background or after the process is killed, without a service. A session that passed its
   planned end is completed when Home next opens. Sessions under one minute are discarded.
+- **Tasks** are stored in Room (`tasks`, `subtasks`; added by the additive 1→2 auto-migration,
+  covered by `AxiomDatabaseMigrationTest`). Deleting is a hard delete whose snapshot is restored
+  with the same ids on undo; completing a repeating task also creates the next occurrence, and
+  undo removes it again. Manual order is a fractional `sort_order`, so a drag writes one row.
+  Views: Today = due today, Upcoming = due later or no date, Overdue = due before today,
+  Done = the latest 300 completed, grouped by completion day.
+- **Undo** runs through `UndoController` in the application scope, so an undo offered by a screen
+  that has closed (the editor) still works from the snackbar.
+- **AI preparation:** the assistant should call `AppContainer.taskCommandExecutor` with
+  `TaskCommand`s (`create_task`, `update_task`, `reschedule_task`, `complete_task`, `delete_task`,
+  `list_open_tasks`). `needsConfirmation` marks the ones to confirm with the user first.
 - **Glass recommendation:** with no manual choice, `GlassModeResolver.recommend` picks Off below
   Android 12, Lite on Android 12, low-RAM devices and phones under ~5 GB memory, otherwise Full.
   Settings shows the recommendation and can restore it.
@@ -144,6 +180,12 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
   composable (see `QuickFocusCard`). Use `animate = false` on progress that ticks.
 - Tickers come from `TimeProvider.ticks` inside `WhileSubscribed` flows, so they stop when the
   screen is not visible.
+- Lists: key rows by a stable id, set `contentType`, pass immutable row models (`TaskListItem`)
+  and build them on `Dispatchers.Default`. Task rows use `GlassTokens.ListItem` (no drop or depth
+  shadow) and never host glass. Keep glass controls in fixed headers rather than floating over a
+  scrolling list.
+- In lazy lists, do not keep gesture state such as a swipe-to-dismiss state in `rememberSaveable`:
+  the list restores it by key, so a re-added row would come back already dismissed.
 
 ## Where to add things in later phases
 

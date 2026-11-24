@@ -18,9 +18,9 @@ import com.kaushalkr.axiom.core.designsystem.glass.GlassSurfaceSpec
 import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
-import com.kaushalkr.axiom.core.designsystem.glass.backdropOrEmpty
 import com.kaushalkr.axiom.core.designsystem.glass.glassSurface
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
+import com.kyant.backdrop.backdrops.emptyBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 // ===== SECTION: GLASS_CARD =====
@@ -50,7 +50,8 @@ fun GlassCard(
 ) {
     val style = LocalGlassStyle.current
     val backdrop = LocalGlassBackdrop.current
-    val cardBackdrop = rememberLayerBackdrop()
+    // Only cards that host glass need their own layer; list rows skip the allocation.
+    val cardBackdrop = if (hostsGlass) rememberLayerBackdrop() else null
     val exportsBackdrop = hostsGlass && style.isEnabled
 
     // Remembered so recomposing the card's content never rebuilds its glass pipeline.
@@ -64,6 +65,7 @@ fun GlassCard(
             exportedBackdrop = if (exportsBackdrop) cardBackdrop else null,
         )
     }
+    val childBackdrop = if (exportsBackdrop && cardBackdrop != null) cardBackdrop else emptyBackdrop()
 
     Column(
         modifier = modifier
@@ -73,7 +75,7 @@ fun GlassCard(
         verticalArrangement = verticalArrangement,
     ) {
         CompositionLocalProvider(
-            LocalGlassBackdrop provides backdropOrEmpty(cardBackdrop, exportsBackdrop),
+            LocalGlassBackdrop provides childBackdrop,
         ) {
             content()
         }
