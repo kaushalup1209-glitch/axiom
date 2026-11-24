@@ -3,9 +3,11 @@ package com.kaushalkr.axiom.core.designsystem.glass
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.effects.colorControls
@@ -13,6 +15,7 @@ import com.kaushalkr.axiom.core.designsystem.glass.shader.CachedHighlights
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
+import com.kyant.shapes.RoundedRectangle
 
 // ===== SECTION: GLASS_SPEC_TYPES =====
 /** Lens parameters for the Backdrop `lens` effect. Rendered only in Full glass. */
@@ -80,6 +83,19 @@ data class GlassSurfaceSpec(
     }
 }
 // ===== END SECTION: GLASS_SPEC_TYPES =====
+
+// ===== SECTION: GLASS_SHAPE_TOKENS =====
+/**
+ * Shared shape instances. Reusing the same instance lets glass modifiers be remembered and
+ * compared by identity, so recomposition does not rebuild the glass pipeline.
+ */
+object GlassShapes {
+    val Capsule: Shape = com.kyant.shapes.Capsule()
+    val Card: Shape = RoundedRectangle(AxiomDimens.cardCornerRadius)
+    val Tile: Shape = RoundedRectangle(AxiomDimens.tileCornerRadius)
+    val Dialog: Shape = RoundedRectangle(AxiomDimens.dialogCornerRadius)
+}
+// ===== END SECTION: GLASS_SHAPE_TOKENS =====
 
 // ===== SECTION: GLASS_SURFACE_TOKENS =====
 /**

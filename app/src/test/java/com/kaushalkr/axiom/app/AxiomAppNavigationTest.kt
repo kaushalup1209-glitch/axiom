@@ -33,7 +33,7 @@ class AxiomAppNavigationTest {
     val composeRule = createComposeRule()
 
     private val heroTitles = mapOf(
-        TopLevelDestination.HOME to R.string.home_hero_title,
+        TopLevelDestination.HOME to R.string.home_goal_title,
         TopLevelDestination.PLANNER to R.string.planner_hero_title,
         TopLevelDestination.FOCUS to R.string.focus_hero_title,
         TopLevelDestination.INSIGHTS to R.string.insights_hero_title,
@@ -44,7 +44,7 @@ class AxiomAppNavigationTest {
         composeRule.onNode(hasText(string(destination.labelRes)) and isSelectable())
 
     private fun assertTabsNavigate() {
-        composeRule.onNodeWithText(string(R.string.home_hero_title)).assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.home_goal_title)), timeoutMillis = 5_000)
         TopLevelDestination.entries.reversed().forEach { destination ->
             tab(destination).performClick()
             composeRule.waitForIdle()
@@ -108,14 +108,14 @@ class AxiomAppNavigationTest {
         composeRule.onNodeWithContentDescription(string(R.string.action_open_settings)).assertDoesNotExist()
 
         composeRule.onNodeWithContentDescription(string(R.string.action_navigate_back)).performClick()
-        composeRule.onNodeWithText(string(R.string.home_hero_title)).assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.home_goal_title)), timeoutMillis = 5_000)
 
         composeRule.onNodeWithContentDescription(string(R.string.action_open_settings)).performClick()
         composeRule.waitUntilExactlyOneExists(hasText(string(R.string.settings_subtitle)), timeoutMillis = 5_000)
         composeRule.onNodeWithText(string(R.string.settings_glass)).assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription(string(R.string.action_navigate_back)).performClick()
-        composeRule.onNodeWithText(string(R.string.home_hero_title)).assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.home_goal_title)), timeoutMillis = 5_000)
     }
 
     @Test

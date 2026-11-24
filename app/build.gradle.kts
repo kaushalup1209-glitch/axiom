@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 // ===== END SECTION: APP_PLUGINS =====
 
@@ -74,6 +76,13 @@ android {
 }
 // ===== END SECTION: APP_ANDROID_CONFIG =====
 
+// ===== SECTION: APP_ROOM_SCHEMA =====
+// Exported Room schemas are committed so future migrations can be generated and tested.
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+// ===== END SECTION: APP_ROOM_SCHEMA =====
+
 // ===== SECTION: APP_DEPENDENCIES =====
 dependencies {
     // Core Android and lifecycle
@@ -87,6 +96,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Jetpack Compose
     implementation(platform(libs.compose.bom))

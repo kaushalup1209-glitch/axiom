@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.lerp
 import com.kaushalkr.axiom.core.designsystem.glass.GlassPressTokens
+import com.kaushalkr.axiom.core.designsystem.glass.GlassShapes
 import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
@@ -42,7 +43,6 @@ import com.kaushalkr.axiom.core.designsystem.glass.glassSurface
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.InteractiveHighlight
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
-import com.kyant.shapes.Capsule
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -66,7 +66,7 @@ fun GlassButton(
     enabled: Boolean = true,
     tint: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified,
-    shape: Shape = Capsule(),
+    shape: Shape = GlassShapes.Capsule,
     minHeight: Dp = 48.dp,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp),
     floating: Boolean = false,
@@ -94,7 +94,7 @@ fun GlassButton(
     }
 
     // ===== SECTION: GLASS_BUTTON_DEFORMATION =====
-    val deformationLayerBlock: (GraphicsLayerScope.() -> Unit)? =
+    val deformationLayerBlock: (GraphicsLayerScope.() -> Unit)? = remember(enabled, interactiveHighlight) {
         if (enabled) {
             {
                 val width = size.width
@@ -123,20 +123,26 @@ fun GlassButton(
         } else {
             null
         }
+    }
     // ===== END SECTION: GLASS_BUTTON_DEFORMATION =====
+
+    // Remembered so recomposition (e.g. a changing label) never rebuilds the glass pipeline.
+    val surface = remember(backdrop, style, floating, shape, tint, deformationLayerBlock) {
+        Modifier.glassSurface(
+            backdrop = backdrop,
+            style = style,
+            spec = if (floating) GlassTokens.FloatingButton else GlassTokens.Button,
+            shape = shape,
+            surfaceColor = if (floating) style.chromeSurfaceColor else style.surfaceColor,
+            tint = tint,
+            layerBlock = deformationLayerBlock,
+        )
+    }
 
     Row(
         modifier = modifier
             .alpha(if (enabled) 1f else 0.4f)
-            .glassSurface(
-                backdrop = backdrop,
-                style = style,
-                spec = if (floating) GlassTokens.FloatingButton else GlassTokens.Button,
-                shape = shape,
-                surfaceColor = if (floating) style.chromeSurfaceColor else style.surfaceColor,
-                tint = tint,
-                layerBlock = deformationLayerBlock,
-            )
+            .then(surface)
             .clickable(
                 enabled = enabled,
                 interactionSource = null,

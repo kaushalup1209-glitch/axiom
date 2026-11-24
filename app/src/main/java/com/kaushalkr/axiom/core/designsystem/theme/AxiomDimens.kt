@@ -28,6 +28,9 @@ object AxiomDimens {
     /** Corner radius of standard glass cards. */
     val cardCornerRadius = 28.dp
 
+    /** Corner radius of compact stat tiles. */
+    val tileCornerRadius = 24.dp
+
     /** Corner radius of dialogs. */
     val dialogCornerRadius = 36.dp
 

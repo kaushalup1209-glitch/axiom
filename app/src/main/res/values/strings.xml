@@ -23,19 +23,65 @@
     <!-- ===== END SECTION: STRINGS_PLACEHOLDER_COMMON ===== -->
 
     <!-- ===== SECTION: STRINGS_HOME ===== -->
-    <string name="home_eyebrow">Today</string>
-    <string name="home_title">Welcome to Axiom</string>
-    <string name="home_subtitle">Your daily command centre for goals, focus and discipline.</string>
-    <string name="home_phase">Phase 02</string>
-    <string name="home_hero_title">Your dashboard is on its way</string>
-    <string name="home_hero_body">Daily goals, upcoming tasks and your study streak will live here.</string>
-    <string-array name="home_planned_features">
-        <item>Daily study goals and progress</item>
-        <item>Upcoming tasks and routines</item>
-        <item>Quick-start focus timer</item>
-        <item>Daily distraction summary</item>
-        <item>Study streaks and productivity overview</item>
-    </string-array>
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_greeting_late_night">Working late</string>
+    <string name="home_greeting_with_name">%1$s, %2$s</string>
+    <string name="home_summary_none">Ready when you are. Start a focus session to begin today\'s streak.</string>
+    <string name="home_summary_progress">%1$s studied so far today. Keep the momentum going.</string>
+    <string name="home_summary_goal_reached">Daily goal reached. Great work today.</string>
+
+    <string name="home_goal_title">Daily goal</string>
+    <string name="home_goal_of">of %1$s</string>
+    <string name="home_goal_remaining">%1$s to go</string>
+    <string name="home_goal_reached">Goal reached</string>
+    <string name="home_goal_percent">%1$d%%</string>
+
+    <string name="home_focus_title">Quick focus</string>
+    <string name="home_focus_status_idle">Pick a length and start</string>
+    <string name="home_focus_status_running">Focusing · %1$s session</string>
+    <string name="home_focus_status_paused">Paused · %1$s session</string>
+    <string name="home_focus_preset">%1$dm</string>
+    <string name="home_focus_start">Start focus</string>
+    <string name="home_focus_pause">Pause</string>
+    <string name="home_focus_resume">Resume</string>
+    <string name="home_focus_finish">Finish</string>
+    <string name="home_focus_remaining_description">%1$s remaining</string>
+
+    <string name="home_stat_study_time">Study time</string>
+    <string name="home_stat_study_caption">Today</string>
+    <string name="home_stat_distraction">Distraction</string>
+    <string name="home_stat_distraction_untracked">Not tracked</string>
+    <string name="home_stat_distraction_caption">Set up in Shield</string>
+
+    <string name="home_streak_title">Study streak</string>
+    <plurals name="home_streak_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="home_streak_caption_met">Today counts. See you tomorrow.</string>
+    <string name="home_streak_caption_pending">Study %1$s today to keep it going.</string>
+    <string name="home_streak_day_met">%1$s, studied</string>
+    <string name="home_streak_day_missed">%1$s, not studied</string>
+
+    <string name="home_preview_badge">Preview</string>
+    <string name="home_routine_title">Today\'s routine</string>
+    <string name="home_routine_up_next">Up next</string>
+    <string name="home_routine_detail">%1$s · %2$s</string>
+    <string name="home_routine_preview_note">Sample routine. Your own arrives with the Planner in Phase 04.</string>
+    <string name="home_tasks_title">Upcoming tasks</string>
+    <plurals name="home_tasks_progress">
+        <item quantity="one">%1$d of %2$d done</item>
+        <item quantity="other">%1$d of %2$d done</item>
+    </plurals>
+    <string name="home_tasks_preview_note">Sample tasks. Your own arrive with the Planner in Phase 03.</string>
+    <string name="home_task_done">Done</string>
+    <string name="home_task_open">Not done</string>
+
+    <string name="duration_minutes">%1$dm</string>
+    <string name="duration_hours">%1$dh</string>
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
     <!-- ===== END SECTION: STRINGS_HOME ===== -->
 
     <!-- ===== SECTION: STRINGS_PLANNER ===== -->
@@ -143,6 +189,14 @@
     <string name="settings_glass_tint_desc">More tint makes text on glass easier to read.</string>
     <string name="settings_adapt_battery">Adapt to Battery Saver</string>
     <string name="settings_adapt_battery_desc">Use Lite glass while Battery Saver is on.</string>
+    <string name="settings_section_study">Study</string>
+    <string name="settings_name">Your name</string>
+    <string name="settings_name_placeholder">Add your name for the greeting</string>
+    <string name="settings_daily_goal">Daily study goal</string>
+    <string name="settings_daily_goal_desc">Home tracks your focused time against this goal.</string>
+    <string name="glass_recommended_auto">Automatic: %1$s is recommended for this device.</string>
+    <string name="glass_recommended_manual">%1$s is recommended for this device.</string>
+    <string name="glass_use_recommended">Use recommended</string>
     <string name="settings_section_motion">Motion</string>
     <string name="settings_animation_scale">Animation scale</string>
     <string name="settings_animation_scale_desc">Speeds up or slows down Axiom\'s animations, like Android\'s animation scale. Off removes motion.</string>

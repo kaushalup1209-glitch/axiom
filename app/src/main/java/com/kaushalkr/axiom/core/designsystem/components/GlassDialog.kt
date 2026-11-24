@@ -30,14 +30,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassShapes
 import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
-import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
-import com.kyant.shapes.RoundedRectangle
 
 // ===== SECTION: GLASS_DIALOG =====
 /**
@@ -125,8 +124,9 @@ private fun GlassDialogLayout(
                 .semantics { paneTitle = title }
                 // Consume taps so touching the panel does not dismiss the dialog.
                 .pointerInput(Unit) { detectTapGestures { } },
-            shape = RoundedRectangle(AxiomDimens.dialogCornerRadius),
+            shape = GlassShapes.Dialog,
             spec = GlassTokens.Dialog,
+            hostsGlass = true,
             surfaceColor = LocalGlassStyle.current.dialogSurfaceColor,
             contentPadding = PaddingValues(
                 start = AxiomSpacing.xl,

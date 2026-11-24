@@ -3,5 +3,9 @@
      Backup rules for Android 11 and lower. Mirrors data_extraction_rules.xml. -->
 <full-backup-content>
     <include domain="file" path="datastore/axiom_appearance.preferences_pb" />
+    <include domain="file" path="datastore/axiom_study.preferences_pb" />
+    <include domain="database" path="axiom.db" />
+    <include domain="database" path="axiom.db-wal" />
+    <include domain="database" path="axiom.db-shm" />
 </full-backup-content>
 <!-- ===== END SECTION: BACKUP_RULES_LEGACY ===== -->

@@ -15,14 +15,18 @@ data class GlassDeviceCapability(
     val supportsBlur: Boolean,
     val supportsRefraction: Boolean,
     val isLowRamDevice: Boolean,
+    /** Physical memory reported by the system, in bytes. */
+    val totalMemoryBytes: Long,
 ) {
     companion object {
         fun from(context: Context): GlassDeviceCapability {
             val activityManager = context.getSystemService(ActivityManager::class.java)
+            val memoryInfo = ActivityManager.MemoryInfo().also { activityManager?.getMemoryInfo(it) }
             return GlassDeviceCapability(
                 supportsBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                 supportsRefraction = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
                 isLowRamDevice = activityManager?.isLowRamDevice == true,
+                totalMemoryBytes = memoryInfo.totalMem,
             )
         }
 
@@ -31,6 +35,7 @@ data class GlassDeviceCapability(
             supportsBlur = true,
             supportsRefraction = true,
             isLowRamDevice = false,
+            totalMemoryBytes = 8L * 1024 * 1024 * 1024,
         )
     }
 }

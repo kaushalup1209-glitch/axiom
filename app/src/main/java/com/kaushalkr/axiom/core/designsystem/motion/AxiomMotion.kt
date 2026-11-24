@@ -96,6 +96,14 @@ object AxiomMotionTokens {
     // Expanding and collapsing content
     val Expand = SpringSpecValues(dampingRatio = 0.95f, stiffness = 380f)
     val ExpandFade = TweenSpecValues(durationMillis = 220, easing = AxiomEasing.Standard)
+
+    // Progress rings and bars filling to a new value (critically damped, no overshoot)
+    val ProgressFill = SpringSpecValues(dampingRatio = 1f, stiffness = 90f)
+
+    // Swapping one block of content for another (e.g. timer controls)
+    val ContentSwapIn = TweenSpecValues(durationMillis = 220, delayMillis = 60, easing = AxiomEasing.EmphasizedDecelerate)
+    val ContentSwapOut = TweenSpecValues(durationMillis = 120, easing = AxiomEasing.EmphasizedAccelerate)
+    val ContentSwapSize = SpringSpecValues(dampingRatio = 1f, stiffness = 420f)
 }
 // ===== END SECTION: MOTION_TOKENS =====
 

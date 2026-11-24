@@ -15,12 +15,19 @@ com.kaushalkr.axiom
 │   ├── AxiomApp.kt                  Root layout: captured screen, floating chrome, overlay host
 │   └── MainActivityViewModel.kt     Settings + Battery Saver + device caps → GlassResolution
 ├── core/
-│   ├── di/AppContainer.kt           Manual DI (DataStore, monitors, capability)
-│   ├── model/AppearanceSettings.kt  ThemeMode, GlassMode, AppearanceSettings
-│   ├── data/appearance/AppearanceRepository.kt   DataStore-backed preferences
+│   ├── di/AppContainer.kt           Manual DI (DataStore, Room, repositories, monitors, time)
+│   ├── model/                       AppearanceSettings, StudyPreferences + StudyDefaults, FocusSession
+│   ├── domain/StudyStreakCalculator.kt   Pure streak rules
+│   ├── data/
+│   │   ├── appearance/AppearanceRepository.kt   Theme, glass, tint, motion preferences
+│   │   ├── study/StudyPreferencesRepository.kt  Name, daily goal, quick-start length
+│   │   ├── focus/                   FocusSessionRepository (active session in DataStore, history in Room), entity, DAO
+│   │   ├── database/AxiomDatabase.kt   Room database (schemas exported to app/schemas)
+│   │   └── sample/PlannerPreviewData.kt   PLACEHOLDER routine/tasks until Phases 03–04
 │   ├── platform/
-│   │   ├── GlassDeviceCapability.kt  API 31 blur / API 33 refraction / low-RAM detection
-│   │   └── PowerSaveModeMonitor.kt   Battery Saver as a Flow
+│   │   ├── GlassDeviceCapability.kt  API level, low-RAM flag and total memory
+│   │   ├── PowerSaveModeMonitor.kt   Battery Saver as a Flow
+│   │   └── TimeProvider.kt           Wall clock + aligned tickers (replaceable in tests)
 │   ├── designsystem/
 │   │   ├── theme/                    AxiomColors, AxiomTypography, AxiomDimens, AxiomTheme
 │   │   ├── layout/AxiomWindowLayout.kt   Width classes, screen content padding
@@ -51,7 +58,12 @@ com.kaushalkr.axiom
 │   ├── AxiomNavigationBar.kt        Floating Liquid Glass tab bar
 │   └── AxiomTopActions.kt           Floating Shield / Settings / Back buttons
 └── feature/
-    ├── home/HomeScreen.kt
+    ├── home/
+    │   ├── HomeScreen.kt             HomeDashboardRoute (stateful) + HomeScreen (stateless)
+    │   ├── HomeViewModel.kt          Minute-tick dashboard state, second-tick focus clock
+    │   ├── HomeUiState.kt, HomeFormatting.kt
+    │   └── components/               DailyGoalCard, QuickFocusCard, StudyStatTile, StreakCard,
+    │                                 TodayRoutineCard, UpcomingTasksCard, HomeCardHeader
     ├── planner/PlannerScreen.kt
     ├── focus/FocusScreen.kt
     ├── insights/InsightsScreen.kt
@@ -110,6 +122,28 @@ Rules that keep this correct:
 `GlassModeResolver` lowers the requested mode when the device cannot render it:
 Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Battery Saver (when
 "Adapt to Battery Saver" is on) → Lite. Settings explains any downgrade.
+
+## Data rules
+
+- **Real vs placeholder data:** placeholder content lives only in `core/data/sample/` and is
+  labelled "Preview" wherever it is shown. `HomeDashboardUiState` documents which fields are real.
+- **Focus timing** is derived from stored timestamps (`ActiveFocusSession`), so it stays exact in
+  the background or after the process is killed, without a service. A session that passed its
+  planned end is completed when Home next opens. Sessions under one minute are discarded.
+- **Glass recommendation:** with no manual choice, `GlassModeResolver.recommend` picks Off below
+  Android 12, Lite on Android 12, low-RAM devices and phones under ~5 GB memory, otherwise Full.
+  Settings shows the recommendation and can restore it.
+
+## Performance rules
+
+- Remember glass modifiers (`GlassCard`, `GlassButton` do this) and use shared shapes from
+  `GlassShapes`, so recomposition never rebuilds the glass pipeline.
+- Set `hostsGlass = true` on a `GlassCard` only when it contains glass controls; exporting a
+  backdrop records an extra layer on every redraw.
+- Keep ticking values out of card parameters: pass a `State` and read it in the smallest
+  composable (see `QuickFocusCard`). Use `animate = false` on progress that ticks.
+- Tickers come from `TimeProvider.ticks` inside `WhileSubscribed` flows, so they stop when the
+  screen is not visible.
 
 ## Where to add things in later phases
 

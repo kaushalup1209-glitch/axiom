@@ -37,6 +37,10 @@ class AxiomScreenshotCaptureTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    private fun waitForHome() {
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.home_goal_title)), timeoutMillis = 5_000)
+    }
+
     private fun capture(name: String) {
         composeRule.waitForIdle()
         val bitmap = composeRule.onRoot().captureToImage().asAndroidBitmap()
@@ -49,18 +53,21 @@ class AxiomScreenshotCaptureTest {
     @Test
     fun home_light_full() {
         composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL) }
+        waitForHome()
         capture("home_light_full")
     }
 
     @Test
     fun home_dark_full() {
         composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL, darkTheme = true) }
+        waitForHome()
         capture("home_dark_full")
     }
 
     @Test
     fun home_light_off() {
         composeRule.setContent { AxiomTestApp(glassMode = GlassMode.OFF) }
+        waitForHome()
         capture("home_light_off")
     }
 
@@ -84,7 +91,16 @@ class AxiomScreenshotCaptureTest {
     @Config(qualifiers = "w840dp-h1200dp-xhdpi")
     fun home_tablet_light_full() {
         composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL) }
+        waitForHome()
         capture("home_tablet_light_full")
+    }
+
+    @Test
+    @Config(qualifiers = "w393dp-h2300dp-xxhdpi")
+    fun home_fullPage_dark_lite() {
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.LITE, darkTheme = true) }
+        waitForHome()
+        capture("home_full_page_dark_lite")
     }
 }
 // ===== END SECTION: TEST_SCREENSHOT_CAPTURE =====

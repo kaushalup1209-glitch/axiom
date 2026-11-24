@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===== SECTION: DATA_EXTRACTION_RULES =====
-     Android 12+ backup rules. Only appearance preferences exist in Phase 01.
-     Revisit when study data (Room) is introduced so private data is handled deliberately. -->
+     Android 12+ backup rules. Appearance and study preferences plus the focus history database are backed up.
+     The active focus session (axiom_focus_state) is transient and intentionally excluded. -->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="file" path="datastore/axiom_appearance.preferences_pb" />
+        <include domain="file" path="datastore/axiom_study.preferences_pb" />
+        <include domain="database" path="axiom.db" />
+        <include domain="database" path="axiom.db-wal" />
+        <include domain="database" path="axiom.db-shm" />
     </cloud-backup>
     <device-transfer>
         <include domain="file" path="datastore/axiom_appearance.preferences_pb" />
+        <include domain="file" path="datastore/axiom_study.preferences_pb" />
+        <include domain="database" path="axiom.db" />
+        <include domain="database" path="axiom.db-wal" />
+        <include domain="database" path="axiom.db-shm" />
     </device-transfer>
 </data-extraction-rules>
 <!-- ===== END SECTION: DATA_EXTRACTION_RULES ===== -->

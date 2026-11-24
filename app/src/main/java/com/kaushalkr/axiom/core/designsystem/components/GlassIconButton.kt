@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
-import com.kyant.shapes.Capsule
+import com.kaushalkr.axiom.core.designsystem.glass.GlassShapes
 
 // ===== SECTION: GLASS_ICON_BUTTON =====
 /** Circular Liquid Glass button holding a single icon. Size equals the minimum touch target. */
@@ -26,7 +26,7 @@ fun GlassIconButton(
     GlassButton(
         onClick = onClick,
         modifier = modifier.size(AxiomDimens.iconButtonSize),
-        shape = Capsule(),
+        shape = GlassShapes.Capsule,
         minHeight = AxiomDimens.iconButtonSize,
         contentPadding = PaddingValues(0.dp),
         floating = floating,

@@ -15,11 +15,16 @@ enum class GlassLimitation {
 // ===== END SECTION: GLASS_LIMITATION =====
 
 // ===== SECTION: GLASS_RESOLUTION =====
-/** The user's requested glass level, the level actually rendered, and the reason for any difference. */
+/**
+ * The glass level the user asked for (manually or by following the recommendation), the level
+ * actually rendered, the reason for any difference, and the device recommendation.
+ */
 data class GlassResolution(
     val requested: GlassMode,
     val effective: GlassMode,
     val limitation: GlassLimitation,
+    val recommended: GlassMode = requested,
+    val followsRecommendation: Boolean = true,
 ) {
     companion object {
         val Default = GlassResolution(GlassMode.FULL, GlassMode.FULL, GlassLimitation.NONE)
@@ -27,12 +32,46 @@ data class GlassResolution(
 }
 // ===== END SECTION: GLASS_RESOLUTION =====
 
+// ===== SECTION: GLASS_RECOMMENDATION_TOKENS =====
+/** Device thresholds behind the automatic glass recommendation. */
+object GlassRecommendationTokens {
+    /**
+     * Phones below this much memory (3–4 GB models report about 2.8–3.8 GB) are steered to
+     * Lite; 6 GB and larger phones report above it and get Full.
+     */
+    const val FULL_GLASS_MIN_MEMORY_BYTES: Long = 5L * 1024 * 1024 * 1024
+}
+// ===== END SECTION: GLASS_RECOMMENDATION_TOKENS =====
+
 // ===== SECTION: GLASS_MODE_RESOLVER =====
 /**
- * Caps the requested glass level by device support and power state.
- * Pure function so it can be unit tested without Android.
+ * Chooses a recommended glass level for the device, then caps the requested level by device
+ * support and power state. Pure functions so they can be unit tested without Android.
  */
 object GlassModeResolver {
+
+    /** The glass level suggested for this device when the user has not chosen one. */
+    fun recommend(capability: GlassDeviceCapability): GlassMode = when {
+        !capability.supportsBlur -> GlassMode.OFF
+        !capability.supportsRefraction -> GlassMode.LITE
+        capability.isLowRamDevice -> GlassMode.LITE
+        capability.totalMemoryBytes in 1 until GlassRecommendationTokens.FULL_GLASS_MIN_MEMORY_BYTES -> GlassMode.LITE
+        else -> GlassMode.FULL
+    }
+
+    /**
+     * @param manualChoice the user's explicit choice, or null to follow [recommend].
+     */
+    fun resolveWithRecommendation(
+        manualChoice: GlassMode?,
+        capability: GlassDeviceCapability,
+        isPowerSaveMode: Boolean,
+        adaptToBatterySaver: Boolean,
+    ): GlassResolution {
+        val recommended = recommend(capability)
+        return resolve(manualChoice ?: recommended, capability, isPowerSaveMode, adaptToBatterySaver)
+            .copy(recommended = recommended, followsRecommendation = manualChoice == null)
+    }
 
     fun resolve(
         requested: GlassMode,

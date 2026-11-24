@@ -42,7 +42,8 @@ enum class AnimationScale(val factor: Float) {
 /** Persisted appearance preferences. Defaults are the values applied on first launch and on reset. */
 data class AppearanceSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val glassMode: GlassMode = GlassMode.FULL,
+    /** The user's manual choice, or null to follow the device recommendation. */
+    val glassMode: GlassMode? = null,
     /** Surface tint strength in the range 0..1. Higher values improve text contrast on glass. */
     val glassTintStrength: Float = DEFAULT_GLASS_TINT_STRENGTH,
     /** When true, Battery Saver caps rendering at [GlassMode.LITE]. */

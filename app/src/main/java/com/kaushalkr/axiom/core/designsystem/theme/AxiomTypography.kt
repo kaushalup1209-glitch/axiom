@@ -15,6 +15,14 @@ import androidx.compose.ui.unit.sp
 private val AxiomFontFamily = FontFamily.Default
 
 val AxiomTypography = Typography(
+    displayMedium = TextStyle(
+        fontFamily = AxiomFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 52.sp,
+        lineHeight = 58.sp,
+        letterSpacing = (-0.02).em,
+        fontFeatureSettings = TABULAR_NUMBERS,
+    ),
     displaySmall = TextStyle(
         fontFamily = AxiomFontFamily,
         fontWeight = FontWeight.Bold,
@@ -87,3 +95,10 @@ val AxiomTypography = Typography(
     ),
 )
 // ===== END SECTION: AXIOM_TYPOGRAPHY =====
+
+// ===== SECTION: AXIOM_TYPOGRAPHY_NUMERIC =====
+private const val TABULAR_NUMBERS = "tnum"
+
+/** Equal-width digits, so changing numbers (timers, totals) do not shift sideways. */
+fun TextStyle.tabularNumbers(): TextStyle = copy(fontFeatureSettings = TABULAR_NUMBERS)
+// ===== END SECTION: AXIOM_TYPOGRAPHY_NUMERIC =====

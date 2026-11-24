@@ -24,8 +24,8 @@ class MainActivityLaunchTest {
 
     @Test
     fun launch_showsHomeAfterAppearanceLoads() {
-        composeRule.waitUntilExactlyOneExists(hasText(string(R.string.home_hero_title)), timeoutMillis = 5_000)
-        composeRule.onNodeWithText(string(R.string.home_title)).assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText(string(R.string.home_goal_title)), timeoutMillis = 5_000)
+        composeRule.onNodeWithText(string(R.string.home_focus_start)).assertIsDisplayed()
     }
 }
 // ===== END SECTION: TEST_MAIN_ACTIVITY_LAUNCH =====

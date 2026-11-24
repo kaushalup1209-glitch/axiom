@@ -22,7 +22,7 @@ import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.feature.assistant.AssistantScreen
 import com.kaushalkr.axiom.feature.focus.FocusScreen
-import com.kaushalkr.axiom.feature.home.HomeScreen
+import com.kaushalkr.axiom.feature.home.HomeDashboardRoute
 import com.kaushalkr.axiom.feature.insights.InsightsScreen
 import com.kaushalkr.axiom.feature.planner.PlannerScreen
 import com.kaushalkr.axiom.feature.settings.SettingsRoute
@@ -60,7 +60,9 @@ fun AxiomNavHost(
         },
     ) {
         // ===== SECTION: NAV_HOST_TOP_LEVEL =====
-        composable<HomeRoute> { HomeScreen() }
+        composable<HomeRoute> {
+            HomeDashboardRoute(onOpenDistractionShield = { navController.navigateToDistractionShield() })
+        }
         composable<PlannerRoute> { PlannerScreen() }
         composable<FocusRoute> { FocusScreen() }
         composable<InsightsRoute> { InsightsScreen() }

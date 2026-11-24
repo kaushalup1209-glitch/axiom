@@ -67,6 +67,31 @@ class GlassModeResolverTest {
         assertEquals(GlassLimitation.NONE, off.limitation)
     }
 
+    @Test
+    fun recommendation_followsDeviceTier() {
+        assertEquals(GlassMode.FULL, GlassModeResolver.recommend(modernDevice))
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(android12Device))
+        assertEquals(GlassMode.OFF, GlassModeResolver.recommend(android11Device))
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(lowRamDevice))
+        val fourGigabytePhone = modernDevice.copy(totalMemoryBytes = 3_700L * 1024 * 1024)
+        assertEquals(GlassMode.LITE, GlassModeResolver.recommend(fourGigabytePhone))
+        val sixGigabytePhone = modernDevice.copy(totalMemoryBytes = 5_600L * 1024 * 1024)
+        assertEquals(GlassMode.FULL, GlassModeResolver.recommend(sixGigabytePhone))
+    }
+
+    @Test
+    fun manualChoice_overridesRecommendation() {
+        val fourGigabytePhone = modernDevice.copy(totalMemoryBytes = 3_700L * 1024 * 1024)
+        val automatic = GlassModeResolver.resolveWithRecommendation(null, fourGigabytePhone, isPowerSaveMode = false, adaptToBatterySaver = true)
+        assertEquals(GlassMode.LITE, automatic.effective)
+        assertEquals(true, automatic.followsRecommendation)
+
+        val manual = GlassModeResolver.resolveWithRecommendation(GlassMode.FULL, fourGigabytePhone, isPowerSaveMode = false, adaptToBatterySaver = true)
+        assertEquals(GlassMode.FULL, manual.effective)
+        assertEquals(GlassMode.LITE, manual.recommended)
+        assertEquals(false, manual.followsRecommendation)
+    }
+
     private fun resolve(
         requested: GlassMode,
         capability: GlassDeviceCapability,

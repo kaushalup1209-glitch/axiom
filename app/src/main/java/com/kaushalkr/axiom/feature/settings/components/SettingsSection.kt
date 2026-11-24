@@ -21,6 +21,8 @@ import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 fun SettingsSection(
     title: String,
     modifier: Modifier = Modifier,
+    /** True when the section holds glass controls (toggles, sliders, segmented controls). */
+    hostsGlass: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -37,6 +39,7 @@ fun SettingsSection(
         )
         GlassCard(
             modifier = Modifier.fillMaxWidth(),
+            hostsGlass = hostsGlass,
             content = content,
         )
     }

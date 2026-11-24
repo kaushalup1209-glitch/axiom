@@ -46,8 +46,8 @@ class MainActivityViewModel(
     ) { settings, isPowerSaveMode ->
         MainActivityUiState.Ready(
             settings = settings,
-            glassResolution = GlassModeResolver.resolve(
-                requested = settings.glassMode,
+            glassResolution = GlassModeResolver.resolveWithRecommendation(
+                manualChoice = settings.glassMode,
                 capability = glassDeviceCapability,
                 isPowerSaveMode = isPowerSaveMode,
                 adaptToBatterySaver = settings.adaptGlassToBatterySaver,

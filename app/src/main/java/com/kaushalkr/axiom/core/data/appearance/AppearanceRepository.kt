@@ -44,6 +44,11 @@ class AppearanceRepository(
         dataStore.edit { it[Keys.GLASS_MODE] = glassMode.name }
     }
 
+    /** Clears the manual choice so the device recommendation applies again. */
+    suspend fun useRecommendedGlassMode() {
+        dataStore.edit { it.remove(Keys.GLASS_MODE) }
+    }
+
     suspend fun setGlassTintStrength(strength: Float) {
         dataStore.edit { it[Keys.GLASS_TINT_STRENGTH] = strength.coerceIn(0f, 1f) }
     }
@@ -72,7 +77,7 @@ class AppearanceRepository(
         val defaults = AppearanceSettings()
         return AppearanceSettings(
             themeMode = enumValueOrDefault(this[Keys.THEME_MODE], defaults.themeMode),
-            glassMode = enumValueOrDefault(this[Keys.GLASS_MODE], defaults.glassMode),
+            glassMode = enumValues<GlassMode>().firstOrNull { it.name == this[Keys.GLASS_MODE] },
             glassTintStrength = (this[Keys.GLASS_TINT_STRENGTH] ?: defaults.glassTintStrength).coerceIn(0f, 1f),
             adaptGlassToBatterySaver = this[Keys.ADAPT_TO_BATTERY_SAVER] ?: defaults.adaptGlassToBatterySaver,
             animationScale = enumValueOrDefault(this[Keys.ANIMATION_SCALE], defaults.animationScale),
