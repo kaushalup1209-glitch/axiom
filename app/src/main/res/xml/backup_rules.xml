@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===== SECTION: BACKUP_RULES_LEGACY =====
+     Backup rules for Android 11 and lower. Mirrors data_extraction_rules.xml. -->
+<full-backup-content>
+    <include domain="file" path="datastore/axiom_appearance.preferences_pb" />
+</full-backup-content>
+<!-- ===== END SECTION: BACKUP_RULES_LEGACY ===== -->

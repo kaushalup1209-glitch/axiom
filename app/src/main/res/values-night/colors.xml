@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== SECTION: WINDOW_COLORS_DARK ===== -->
+    <color name="axiom_window_background">#FF090C13</color>
+    <!-- ===== END SECTION: WINDOW_COLORS_DARK ===== -->
+</resources>

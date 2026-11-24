@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== SECTION: STRINGS_APP_IDENTITY ===== -->
+    <string name="app_name" translatable="false">Axiom</string>
+    <string name="app_tagline">Master your time. Master your life.</string>
+    <string name="app_developer">by Kaushal Kr</string>
+    <!-- ===== END SECTION: STRINGS_APP_IDENTITY ===== -->
+
+    <!-- ===== SECTION: STRINGS_NAVIGATION ===== -->
+    <string name="nav_home">Home</string>
+    <string name="nav_planner">Planner</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_insights">Insights</string>
+    <string name="nav_assistant">AI</string>
+    <string name="action_open_shield">Open Distraction Shield</string>
+    <string name="action_open_settings">Open Settings</string>
+    <string name="action_navigate_back">Back</string>
+    <!-- ===== END SECTION: STRINGS_NAVIGATION ===== -->
+
+    <!-- ===== SECTION: STRINGS_PLACEHOLDER_COMMON ===== -->
+    <string name="placeholder_arriving_in">Arriving in %1$s</string>
+    <string name="placeholder_planned_title">What\'s planned</string>
+    <!-- ===== END SECTION: STRINGS_PLACEHOLDER_COMMON ===== -->
+
+    <!-- ===== SECTION: STRINGS_HOME ===== -->
+    <string name="home_eyebrow">Today</string>
+    <string name="home_title">Welcome to Axiom</string>
+    <string name="home_subtitle">Your daily command centre for goals, focus and discipline.</string>
+    <string name="home_phase">Phase 02</string>
+    <string name="home_hero_title">Your dashboard is on its way</string>
+    <string name="home_hero_body">Daily goals, upcoming tasks and your study streak will live here.</string>
+    <string-array name="home_planned_features">
+        <item>Daily study goals and progress</item>
+        <item>Upcoming tasks and routines</item>
+        <item>Quick-start focus timer</item>
+        <item>Daily distraction summary</item>
+        <item>Study streaks and productivity overview</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_HOME ===== -->
+
+    <!-- ===== SECTION: STRINGS_PLANNER ===== -->
+    <string name="planner_eyebrow">Plan</string>
+    <string name="planner_title">Planner</string>
+    <string name="planner_subtitle">Tasks, routines, subjects and exams in one calm place.</string>
+    <string name="planner_phase">Phases 03–04</string>
+    <string name="planner_hero_title">Plan with intent</string>
+    <string name="planner_hero_body">Prioritise tasks, build routines and keep every exam in view.</string>
+    <string-array name="planner_planned_features">
+        <item>To-do lists and task priorities</item>
+        <item>Daily, weekly and monthly routines</item>
+        <item>Subject and syllabus management</item>
+        <item>Exam countdowns and deadlines</item>
+        <item>Recurring tasks, reminders and rescheduling</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_PLANNER ===== -->
+
+    <!-- ===== SECTION: STRINGS_FOCUS ===== -->
+    <string name="focus_eyebrow">Study</string>
+    <string name="focus_title">Focus</string>
+    <string name="focus_subtitle">Deep work sessions that stay accurate in the background.</string>
+    <string name="focus_phase">Phase 05</string>
+    <string name="focus_hero_title">Enter deep focus</string>
+    <string name="focus_hero_body">Pomodoro, stopwatch and countdown timers with subject-wise tracking.</string>
+    <string-array name="focus_planned_features">
+        <item>Pomodoro, stopwatch and countdown timers</item>
+        <item>Custom study and break durations</item>
+        <item>Subject-wise study tracking</item>
+        <item>Deep focus and strict modes</item>
+        <item>Timers that stay accurate in the background</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_FOCUS ===== -->
+
+    <!-- ===== SECTION: STRINGS_INSIGHTS ===== -->
+    <string name="insights_eyebrow">Reflect</string>
+    <string name="insights_title">Insights</string>
+    <string name="insights_subtitle">Understand how you really study.</string>
+    <string name="insights_phase">Phases 09–10</string>
+    <string name="insights_hero_title">Measure what matters</string>
+    <string name="insights_hero_body">Reports, focus scores and heatmaps built from your real sessions.</string>
+    <string-array name="insights_planned_features">
+        <item>Daily, weekly and monthly reports</item>
+        <item>Planned versus actual study time</item>
+        <item>App-wise distraction breakdown</item>
+        <item>Focus score and procrastination tracking</item>
+        <item>Heatmaps, consistency and energy patterns</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_INSIGHTS ===== -->
+
+    <!-- ===== SECTION: STRINGS_ASSISTANT ===== -->
+    <string name="assistant_eyebrow">Coach</string>
+    <string name="assistant_title">AI Assistant</string>
+    <string name="assistant_subtitle">A discipline coach that plans with you.</string>
+    <string name="assistant_phase">Phases 11–13</string>
+    <string name="assistant_hero_title">Plan by conversation</string>
+    <string name="assistant_hero_body">Create tasks and routines in plain language. Axiom asks before making significant changes.</string>
+    <string-array name="assistant_planned_features">
+        <item>Tasks, reminders and routines from plain language</item>
+        <item>Personalised study plans</item>
+        <item>Daily productivity review</item>
+        <item>Recovery Mode after an unproductive stretch</item>
+        <item>Emergency Study Mode before exams</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_ASSISTANT ===== -->
+
+    <!-- ===== SECTION: STRINGS_SHIELD ===== -->
+    <string name="shield_eyebrow">Protect</string>
+    <string name="shield_title">Distraction Shield</string>
+    <string name="shield_subtitle">See what pulls you away, then take back control.</string>
+    <string name="shield_phase">Phases 06–08</string>
+    <string name="shield_hero_title">Guard your attention</string>
+    <string name="shield_hero_body">Usage tracking and app limits work only with your permission, and your data stays on your device.</string>
+    <string-array name="shield_planned_features">
+        <item>App usage time and opening frequency</item>
+        <item>Session-wise distraction records</item>
+        <item>Whitelist for study and essential apps</item>
+        <item>App blocking, schedules and daily limits</item>
+        <item>Intentional-open prompts and emergency exits</item>
+    </string-array>
+    <!-- ===== END SECTION: STRINGS_SHIELD ===== -->
+
+    <!-- ===== SECTION: STRINGS_SETTINGS ===== -->
+    <string name="settings_eyebrow">Preferences</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Tune how Axiom looks and feels.</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_glass">Glass effects</string>
+    <string name="glass_full">Full</string>
+    <string name="glass_lite">Lite</string>
+    <string name="glass_off">Off</string>
+    <string name="glass_desc_full">Refraction, blur, edge lighting and fluid motion.</string>
+    <string name="glass_desc_lite">Frosted blur and edge lighting without refraction. Uses less battery.</string>
+    <string name="glass_desc_off">Solid surfaces without glass rendering. Lightest on older devices.</string>
+    <string name="glass_limit_battery_saver">Battery Saver is on, so Lite glass is in use.</string>
+    <string name="glass_limit_no_refraction">Refraction needs Android 13 or later, so Lite glass is in use.</string>
+    <string name="glass_limit_no_blur">Glass needs Android 12 or later, so solid surfaces are in use.</string>
+    <string name="glass_limit_low_ram">This device has limited memory, so Lite glass is in use.</string>
+    <string name="settings_glass_tint">Glass tint</string>
+    <string name="settings_glass_tint_value">%1$d%%</string>
+    <string name="settings_glass_tint_desc">More tint makes text on glass easier to read.</string>
+    <string name="settings_adapt_battery">Adapt to Battery Saver</string>
+    <string name="settings_adapt_battery_desc">Use Lite glass while Battery Saver is on.</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version_and_developer">Version %1$s · %2$s</string>
+    <string name="settings_licenses">Open-source licenses</string>
+    <string name="settings_licenses_desc">Liquid Glass, icons and libraries</string>
+    <string name="settings_reset_appearance">Reset appearance</string>
+    <string name="settings_reset_appearance_desc">Restore theme and glass defaults</string>
+    <!-- ===== END SECTION: STRINGS_SETTINGS ===== -->
+
+    <!-- ===== SECTION: STRINGS_DIALOGS ===== -->
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_close">Close</string>
+    <string name="dialog_reset_title">Reset appearance?</string>
+    <string name="dialog_reset_message">Theme, glass effects, tint and Battery Saver behaviour return to their defaults.</string>
+    <string name="dialog_reset_confirm">Reset</string>
+    <string name="dialog_licenses_title">Open-source licenses</string>
+    <string name="dialog_licenses_message">Liquid Glass rendering uses Backdrop and Shapes by Kyant (Apache License 2.0). The glass button, toggle, slider and tab bar are adapted from the Backdrop catalog app (Apache License 2.0).\n\nIcons are Material Symbols by Google (Apache License 2.0). Built with Android Jetpack and Kotlin (Apache License 2.0).</string>
+    <!-- ===== END SECTION: STRINGS_DIALOGS ===== -->
+</resources>

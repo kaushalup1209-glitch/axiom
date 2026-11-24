@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===== SECTION: LAUNCHER_ICON_FOREGROUND =====
+     Axiom mark: a rising peak (the "A") with a focus point. Kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M36,73L54,35L72,73"
+        android:strokeWidth="8.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#FF7CF5D6"
+        android:pathData="M54,62.5m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+</vector>
+<!-- ===== END SECTION: LAUNCHER_ICON_FOREGROUND ===== -->
