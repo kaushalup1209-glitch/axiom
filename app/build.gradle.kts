@@ -102,3 +102,19 @@ dependencies {
     debugImplementation(libs.compose.ui.test.manifest)
 }
 // ===== END SECTION: APP_DEPENDENCIES =====
+
+// ===== SECTION: APP_DIST_DEBUG_APK =====
+// Every assembleDebug refreshes dist/axiom-<versionName>-debug.apk, the single installable
+// build kept at the project root. Sync also removes stale APKs left from older versions.
+val distDebugApkName = "axiom-${android.defaultConfig.versionName}-debug.apk"
+val syncDebugApkToDist = tasks.register<Sync>("syncDebugApkToDist") {
+    description = "Copies the latest debug APK to dist/$distDebugApkName."
+    from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
+    into(rootProject.layout.projectDirectory.dir("dist"))
+    // String-pattern rename keeps the task compatible with the configuration cache.
+    rename("app-debug\\.apk", distDebugApkName)
+}
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy(syncDebugApkToDist)
+}
+// ===== END SECTION: APP_DIST_DEBUG_APK =====
