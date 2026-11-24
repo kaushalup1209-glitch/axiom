@@ -7,14 +7,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kaushalkr.axiom.AxiomApplication
+import com.kaushalkr.axiom.core.data.academic.ExamRepository
 import com.kaushalkr.axiom.core.data.focus.FocusSessionRepository
-import com.kaushalkr.axiom.core.data.sample.PlannerPreview
-import com.kaushalkr.axiom.core.data.sample.PlannerPreviewData
+import com.kaushalkr.axiom.core.data.routine.RoutineRepository
 import com.kaushalkr.axiom.core.data.study.StudyPreferencesRepository
 import com.kaushalkr.axiom.core.data.task.TaskRepository
 import com.kaushalkr.axiom.core.domain.StudyStreakCalculator
+import com.kaushalkr.axiom.core.domain.academic.ExamCountdown
+import com.kaushalkr.axiom.core.domain.routine.RoutineSchedule
 import com.kaushalkr.axiom.core.domain.task.TaskActions
 import com.kaushalkr.axiom.core.model.ActiveFocusSession
+import com.kaushalkr.axiom.core.model.Exam
+import com.kaushalkr.axiom.core.model.RoutineBlock
 import com.kaushalkr.axiom.core.model.StudyDefaults
 import com.kaushalkr.axiom.core.platform.TimeProvider
 import com.kaushalkr.axiom.feature.tasks.TaskListItem
@@ -47,8 +51,9 @@ class HomeViewModel(
     private val focusSessions: FocusSessionRepository,
     private val tasks: TaskRepository,
     private val taskActions: TaskActions,
+    private val routines: RoutineRepository,
+    private val exams: ExamRepository,
     private val timeProvider: TimeProvider,
-    private val plannerPreview: PlannerPreview = PlannerPreviewData.Default,
 ) : ViewModel() {
 
     // ===== SECTION: HOME_VM_TIME =====
@@ -70,6 +75,12 @@ class HomeViewModel(
     }
         .flowOn(Dispatchers.Default)
         .distinctUntilChanged()
+
+    /** Tasks, timetable blocks and exams in one flow, so the dashboard combine stays small. */
+    private val plan = combine(taskSummary, routines.blocks, exams.exams) { taskSummary, blocks, examList ->
+        HomePlan(taskSummary = taskSummary, blocks = blocks, exams = examList)
+    }
+        .distinctUntilChanged()
     // ===== END SECTION: HOME_VM_TIME =====
 
     // ===== SECTION: HOME_VM_DASHBOARD =====
@@ -78,8 +89,8 @@ class HomeViewModel(
         studyPreferences.preferences,
         dailyTotals,
         focusSessions.activeSession,
-        taskSummary,
-    ) { now, preferences, totals, active, taskSummary ->
+        plan,
+    ) { now, preferences, totals, active, plan ->
         val dateTime = localDateTime(now)
         val today = dateTime.toLocalDate()
         val liveTodayMillis = (totals[today] ?: 0L) + (active?.focusedMillis(now) ?: 0L)
@@ -97,10 +108,12 @@ class HomeViewModel(
                 minimumMillis = StudyDefaults.STREAK_MINIMUM_MINUTES * MINUTE_MILLIS,
             ),
             distractionTodayMinutes = null,
-            tasks = taskSummary,
-            plannerPreview = plannerPreview,
+            tasks = plan.taskSummary,
+            routine = RoutineSchedule.now(plan.blocks, dateTime, upcomingLimit = HOME_UPCOMING_BLOCKS),
+            nextExam = ExamCountdown.next(plan.exams, today),
         )
     }
+        .flowOn(Dispatchers.Default)
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), initialValue = null)
     // ===== END SECTION: HOME_VM_DASHBOARD =====
@@ -202,6 +215,8 @@ class HomeViewModel(
                     focusSessions = container.focusSessionRepository,
                     tasks = container.taskRepository,
                     taskActions = container.taskActions,
+                    routines = container.routineRepository,
+                    exams = container.examRepository,
                     timeProvider = container.timeProvider,
                 )
             }
@@ -209,3 +224,14 @@ class HomeViewModel(
     }
     // ===== END SECTION: HOME_VM_HELPERS =====
 }
+
+// ===== SECTION: HOME_VM_PLAN =====
+private data class HomePlan(
+    val taskSummary: HomeTaskSummary,
+    val blocks: List<RoutineBlock>,
+    val exams: List<Exam>,
+)
+
+/** Upcoming blocks shown on the routine card; the rest are a tap away in the timetable. */
+private const val HOME_UPCOMING_BLOCKS = 3
+// ===== END SECTION: HOME_VM_PLAN =====

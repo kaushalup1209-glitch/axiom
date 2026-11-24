@@ -65,11 +65,18 @@
     <string name="home_streak_day_met">%1$s, studied</string>
     <string name="home_streak_day_missed">%1$s, not studied</string>
 
-    <string name="home_preview_badge">Preview</string>
     <string name="home_routine_title">Today\'s routine</string>
+    <plurals name="home_routine_today_count">
+        <item quantity="one">%1$d block today</item>
+        <item quantity="other">%1$d blocks today</item>
+    </plurals>
     <string name="home_routine_up_next">Up next</string>
     <string name="home_routine_detail">%1$s · %2$s</string>
-    <string name="home_routine_preview_note">Sample routine. Your own arrives with the Planner in Phase 04.</string>
+    <string name="home_routine_left">%1$s left</string>
+    <string name="home_routine_empty">No routine yet. Build your timetable to see what\'s next here.</string>
+    <string name="home_routine_done_today">That\'s everything on today\'s timetable.</string>
+    <string name="home_routine_open">Open timetable</string>
+    <string name="home_exam_title">Next exam</string>
     <string name="home_tasks_title">Today\'s tasks</string>
     <plurals name="home_tasks_progress">
         <item quantity="one">%1$d of %2$d done</item>
@@ -90,7 +97,6 @@
     <!-- ===== END SECTION: STRINGS_HOME ===== -->
 
     <!-- ===== SECTION: STRINGS_TASKS_LIST ===== -->
-    <string name="tasks_eyebrow">Planner</string>
     <string name="tasks_title">Tasks</string>
     <string name="tasks_new">New task</string>
     <string name="tasks_search_placeholder">Search tasks</string>
@@ -225,6 +231,175 @@
     <string name="dialog_discard_keep">Keep editing</string>
     <!-- ===== END SECTION: STRINGS_TASK_EDITOR ===== -->
 
+    <!-- ===== SECTION: STRINGS_PLANNER ===== -->
+    <string name="planner_section_routine">Routine</string>
+    <string name="planner_section_academics">Academics</string>
+    <!-- ===== END SECTION: STRINGS_PLANNER ===== -->
+
+    <!-- ===== SECTION: STRINGS_ROUTINE_TIMETABLE ===== -->
+    <string name="routine_kind_study">Study</string>
+    <string name="routine_kind_break">Break</string>
+    <string name="routine_kind_sleep">Sleep</string>
+    <string name="routine_kind_personal">Personal</string>
+    <string name="routine_default_study">Study session</string>
+    <string name="routine_default_break">Break</string>
+    <string name="routine_default_sleep">Sleep</string>
+    <string name="routine_default_personal">Personal time</string>
+
+    <string name="routine_time_range">%1$s – %2$s</string>
+    <string name="routine_view_day">Day</string>
+    <string name="routine_view_week">Week</string>
+    <string name="routine_view_month">Month</string>
+    <string name="routine_back_to_today">Today</string>
+    <string name="routine_new_block">New block</string>
+    <string name="routine_previous_period">Previous</string>
+    <string name="routine_next_period">Next</string>
+    <string name="routine_nothing_planned">Nothing planned</string>
+    <plurals name="routine_summary_blocks">
+        <item quantity="one">%1$d block</item>
+        <item quantity="other">%1$d blocks</item>
+    </plurals>
+    <string name="routine_summary_planned">%1$s planned</string>
+    <plurals name="routine_month_exams">
+        <item quantity="one">%1$d exam or deadline this month</item>
+        <item quantity="other">%1$d exams and deadlines this month</item>
+    </plurals>
+    <string name="routine_month_no_exams">No exams or deadlines this month</string>
+    <string name="routine_month_exams_title">This month\'s exams and deadlines</string>
+
+    <string name="routine_now">Now</string>
+    <string name="routine_free_day">Free</string>
+    <plurals name="routine_more_blocks">
+        <item quantity="one">+%1$d more</item>
+        <item quantity="other">+%1$d more</item>
+    </plurals>
+    <string name="routine_day_empty_hint">Nothing planned for this day. Tap an empty hour to add a block.</string>
+    <string name="routine_first_block_hint">Build your timetable with study, break, sleep and personal blocks. Tap an empty hour or New block to start.</string>
+
+    <string name="routine_block_description">%1$s, %2$s, %3$s</string>
+    <string name="routine_block_continued">%1$s (continued)</string>
+    <plurals name="routine_linked_tasks">
+        <item quantity="one">%1$d/%2$d task</item>
+        <item quantity="other">%1$d/%2$d tasks</item>
+    </plurals>
+    <string name="routine_action_move_earlier">Move 15 minutes earlier</string>
+    <string name="routine_action_move_later">Move 15 minutes later</string>
+
+    <string name="routine_repeat_every_day">Every day</string>
+    <string name="routine_repeat_weekdays">Weekdays</string>
+    <string name="routine_repeat_weekends">Weekends</string>
+    <string name="routine_repeat_one_day">One day</string>
+
+    <string name="undo_block_moved">Moved “%1$s”</string>
+    <string name="undo_block_moved_overlap">Moved “%1$s”. It now overlaps another block.</string>
+    <!-- ===== END SECTION: STRINGS_ROUTINE_TIMETABLE ===== -->
+
+    <!-- ===== SECTION: STRINGS_ROUTINE_EDITOR ===== -->
+    <string name="routine_editor_title_new">New block</string>
+    <string name="routine_editor_title_edit">Edit block</string>
+    <string name="routine_editor_title_label">Block title</string>
+    <string name="routine_editor_type">Type</string>
+    <string name="routine_editor_no_subjects">Add subjects in Academics to link study blocks to them.</string>
+    <string name="routine_editor_time">Time</string>
+    <string name="routine_editor_starts">Starts %1$s</string>
+    <string name="routine_editor_ends">Ends %1$s</string>
+    <string name="routine_editor_next_day">Ends the next day.</string>
+    <string name="routine_editor_length">Length</string>
+    <string name="routine_editor_on_days">On these days</string>
+    <string name="routine_editor_one_day_hint">Happens once on this date. Choose a repeat option to make it a weekly routine.</string>
+    <string name="routine_editor_linked_tasks">Linked tasks</string>
+    <string name="routine_editor_linked_tasks_empty">Link to-do tasks you plan to work on during this block.</string>
+    <string name="routine_editor_link_tasks">Link tasks</string>
+    <plurals name="routine_editor_linked_tasks_limit">
+        <item quantity="one">A block can link up to %1$d task.</item>
+        <item quantity="other">A block can link up to %1$d tasks.</item>
+    </plurals>
+    <string name="routine_link_sheet_empty">No open tasks to link. Add tasks in the Tasks section first.</string>
+    <string name="routine_editor_automation">Automation</string>
+    <string name="routine_editor_automation_note">Saved with the block now. Each one starts working when its feature arrives.</string>
+    <string name="routine_automation_focus">Start a focus timer automatically</string>
+    <string name="routine_automation_track">Track distractions during this block</string>
+    <string name="routine_automation_track_phase">Phases 06–07</string>
+    <string name="routine_automation_restrict">Restrict distracting apps</string>
+    <string name="routine_automation_restrict_phase">Phase 08</string>
+    <string name="routine_editor_duplicate">Duplicate</string>
+    <string name="routine_discard_message">Your edits to this block will be lost.</string>
+
+    <plurals name="routine_conflict_title">
+        <item quantity="one">%1$d overlap</item>
+        <item quantity="other">%1$d overlaps</item>
+    </plurals>
+    <string name="routine_conflict_fix">Fix</string>
+    <string name="routine_conflict_item">%1$s (%2$s)</string>
+    <string name="routine_conflict_sheet_title">This block overlaps others</string>
+    <string name="routine_conflict_sheet_body">It overlaps %1$s. Choose how to resolve it.</string>
+    <string name="routine_conflict_move">Move to %1$s</string>
+    <string name="routine_conflict_shorten">Shorten to %1$s</string>
+    <string name="routine_conflict_keep_both">Keep both</string>
+    <!-- ===== END SECTION: STRINGS_ROUTINE_EDITOR ===== -->
+
+    <!-- ===== SECTION: STRINGS_ACADEMICS ===== -->
+    <string name="academics_summary_empty">Add subjects to track your syllabus, exams and deadlines.</string>
+    <plurals name="academics_summary_subjects">
+        <item quantity="one">%1$d subject</item>
+        <item quantity="other">%1$d subjects</item>
+    </plurals>
+    <string name="academics_summary_syllabus">%1$d%% of syllabus done</string>
+    <string name="academics_add_subject">Add subject</string>
+    <string name="academics_add_exam">Add exam</string>
+    <string name="academics_exams_title">Exams and deadlines</string>
+    <string name="academics_exams_empty">No upcoming exams or deadlines.</string>
+    <string name="academics_subjects_title">Subjects</string>
+    <string name="academics_subjects_empty">No subjects yet. Add one to start tracking chapters.</string>
+    <string name="academics_hide_past">Hide past</string>
+    <plurals name="academics_show_past">
+        <item quantity="one">Show %1$d past</item>
+        <item quantity="other">Show %1$d past</item>
+    </plurals>
+
+    <string name="subject_name_label">Subject name</string>
+    <string name="subject_name_placeholder">Subject name</string>
+    <string name="subject_color">Colour</string>
+    <string name="subject_color_option">Colour %1$d</string>
+    <string name="subject_edit">Edit subject</string>
+    <string name="subject_delete">Delete subject</string>
+    <string name="subject_no_chapters">No chapters yet. Add your syllabus, one chapter per line.</string>
+    <plurals name="subject_chapters_progress">
+        <item quantity="one">%1$d of %2$d chapter done</item>
+        <item quantity="other">%1$d of %2$d chapters done</item>
+    </plurals>
+    <plurals name="subject_open_tasks">
+        <item quantity="one">%1$d open task</item>
+        <item quantity="other">%1$d open tasks</item>
+    </plurals>
+    <string name="subject_chapters_placeholder">One chapter per line</string>
+    <string name="subject_chapters_add">Add chapters</string>
+    <string name="subject_error_blank">Enter a subject name.</string>
+    <string name="subject_error_duplicate">A subject with this name already exists.</string>
+
+    <string name="exam_kind_exam">Exam</string>
+    <string name="exam_kind_test">Test</string>
+    <string name="exam_kind_assignment">Assignment</string>
+    <string name="exam_kind_project">Project</string>
+    <string name="exam_kind_deadline">Deadline</string>
+    <plurals name="exam_in_days">
+        <item quantity="one">In %1$d day</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
+    <plurals name="exam_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <string name="exam_editor_title_new">New exam or deadline</string>
+    <string name="exam_editor_title_edit">Edit exam or deadline</string>
+    <string name="exam_editor_when">When</string>
+    <string name="exam_title_label">Exam or deadline title</string>
+    <string name="exam_title_placeholder">What\'s coming up?</string>
+    <string name="exam_notes_placeholder">Notes (optional)</string>
+    <string name="exam_delete">Delete</string>
+    <string name="exam_discard_message">Your edits to this exam will be lost.</string>
+    <!-- ===== END SECTION: STRINGS_ACADEMICS ===== -->
+
     <!-- ===== SECTION: STRINGS_FOCUS ===== -->
     <string name="focus_eyebrow">Study</string>
     <string name="focus_title">Focus</string>
@@ -345,6 +520,6 @@
     <string name="dialog_reset_message">Theme, glass effects, tint, Battery Saver behaviour and animation scale return to their defaults.</string>
     <string name="dialog_reset_confirm">Reset</string>
     <string name="dialog_licenses_title">Open-source licenses</string>
-    <string name="dialog_licenses_message">Liquid Glass rendering uses Backdrop and Shapes by Kyant (Apache License 2.0). The glass button, toggle, slider and tab bar are adapted from the Backdrop catalog app (Apache License 2.0).\n\nIcons are Material Symbols by Google (Apache License 2.0). Built with Android Jetpack and Kotlin (Apache License 2.0).</string>
+    <string name="dialog_licenses_message">Liquid Glass rendering uses Backdrop and Shapes by Kyant (Apache License 2.0). The glass button, toggle, slider and tab bar are adapted from the Backdrop catalog app (Apache License 2.0).\n\nIcons are Material Symbols and Material Icons by Google (Apache License 2.0). Built with Android Jetpack and Kotlin (Apache License 2.0).</string>
     <!-- ===== END SECTION: STRINGS_DIALOGS ===== -->
 </resources>

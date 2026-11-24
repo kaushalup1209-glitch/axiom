@@ -1,8 +1,9 @@
 package com.kaushalkr.axiom.feature.home
 
 import androidx.compose.runtime.Immutable
-import com.kaushalkr.axiom.core.data.sample.PlannerPreview
 import com.kaushalkr.axiom.core.domain.StudyStreak
+import com.kaushalkr.axiom.core.domain.routine.RoutineNow
+import com.kaushalkr.axiom.core.model.Exam
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -46,9 +47,14 @@ data class HomeDashboardUiState(
     val distractionTodayMinutes: Int?,
     /** Real data: today's and overdue tasks from the task database. */
     val tasks: HomeTaskSummary,
-    /** PLACEHOLDER data: the routine until routines exist (Phase 04). */
-    val plannerPreview: PlannerPreview,
+    /** Real data: ongoing and upcoming timetable blocks from the routine database. */
+    val routine: RoutineNow,
+    /** Real data: the nearest exam or deadline from today on, or null when none is planned. */
+    val nextExam: Exam?,
 ) {
+    /** Minute of the day for [currentTime], used for ongoing block progress. */
+    val currentMinute: Int get() = currentTime.hour * 60 + currentTime.minute
+
     val goalProgress: Float
         get() = if (dailyGoalMinutes <= 0) 0f else studiedTodayMinutes.toFloat() / dailyGoalMinutes
 

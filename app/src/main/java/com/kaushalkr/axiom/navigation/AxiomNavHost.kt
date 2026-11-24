@@ -9,7 +9,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavBackStackEntry
@@ -21,14 +25,19 @@ import androidx.navigation.toRoute
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
+import com.kaushalkr.axiom.feature.academics.exam.ExamEditorRoute
+import com.kaushalkr.axiom.feature.academics.subject.SubjectDetailRoute
 import com.kaushalkr.axiom.feature.assistant.AssistantScreen
 import com.kaushalkr.axiom.feature.focus.FocusScreen
 import com.kaushalkr.axiom.feature.home.HomeDashboardRoute
 import com.kaushalkr.axiom.feature.insights.InsightsScreen
 import com.kaushalkr.axiom.feature.planner.PlannerScreen
+import com.kaushalkr.axiom.feature.planner.PlannerSection
+import com.kaushalkr.axiom.feature.routine.editor.RoutineBlockEditorRoute
 import com.kaushalkr.axiom.feature.settings.SettingsRoute
 import com.kaushalkr.axiom.feature.shield.DistractionShieldScreen
 import com.kaushalkr.axiom.feature.tasks.editor.TaskEditorScreenRoute
+import java.time.LocalDate
 
 // ===== SECTION: NAV_HOST =====
 /**
@@ -43,6 +52,12 @@ fun AxiomNavHost(
 ) {
     val motion = LocalAxiomMotion.current
     val transitions = remember(motion) { AxiomNavTransitions(motion) }
+    // A Planner section another screen asked to open; PlannerScreen applies it once, then clears it.
+    var requestedPlannerSection by rememberSaveable { mutableStateOf<PlannerSection?>(null) }
+    val openPlannerSection: (PlannerSection) -> Unit = { section ->
+        requestedPlannerSection = section
+        navController.navigateToTopLevel(TopLevelDestination.PLANNER)
+    }
 
     NavHost(
         navController = navController,
@@ -65,15 +80,25 @@ fun AxiomNavHost(
         composable<HomeRoute> {
             HomeDashboardRoute(
                 onOpenDistractionShield = { navController.navigateToDistractionShield() },
-                onOpenPlanner = { navController.navigateToTopLevel(TopLevelDestination.PLANNER) },
+                onOpenPlanner = { openPlannerSection(PlannerSection.TASKS) },
                 onOpenTask = { taskId -> navController.navigateToTaskEditor(taskId) },
                 onAddTask = { navController.navigateToTaskEditor(dueToday = true) },
+                onOpenTimetable = { openPlannerSection(PlannerSection.ROUTINE) },
+                onOpenBlock = { blockId -> navController.navigateToRoutineBlock(blockId = blockId) },
+                onOpenExam = { examId -> navController.navigateToExam(examId = examId) },
             )
         }
         composable<PlannerRoute> {
             PlannerScreen(
                 onOpenTask = { taskId -> navController.navigateToTaskEditor(taskId) },
                 onNewTask = { dueToday -> navController.navigateToTaskEditor(dueToday = dueToday) },
+                onOpenBlock = { blockId -> navController.navigateToRoutineBlock(blockId = blockId) },
+                onNewBlock = { date, startMinute -> navController.navigateToRoutineBlock(date = date, startMinute = startMinute) },
+                onOpenSubject = { subjectId -> navController.navigateToSubject(subjectId) },
+                onOpenExam = { examId -> navController.navigateToExam(examId = examId) },
+                onNewExam = { navController.navigateToExam() },
+                requestedSection = requestedPlannerSection,
+                onSectionRequestHandled = { requestedPlannerSection = null },
             )
         }
         composable<FocusRoute> { FocusScreen() }
@@ -94,6 +119,42 @@ fun AxiomNavHost(
             )
         }
         // ===== END SECTION: NAV_HOST_SECONDARY =====
+
+        // ===== SECTION: NAV_HOST_PLANNER =====
+        composable<RoutineBlockRoute> { entry ->
+            val route = entry.toRoute<RoutineBlockRoute>()
+            RoutineBlockEditorRoute(
+                blockId = route.blockId,
+                duplicateOf = route.duplicateOf,
+                initialDate = route.epochDay.takeIf { it != RoutineBlockRoute.NO_EPOCH_DAY }?.let(LocalDate::ofEpochDay),
+                initialStartMinute = route.startMinute.takeIf { it >= 0 },
+                onClose = { if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack() },
+                // The copy replaces this editor, so Back from it returns to the timetable.
+                onOpenDuplicate = { blockId ->
+                    if (navController.currentBackStackEntry?.id == entry.id) {
+                        navController.navigateToRoutineBlock(duplicateOf = blockId, replaceCurrent = true)
+                    }
+                },
+            )
+        }
+        composable<SubjectRoute> { entry ->
+            val route = entry.toRoute<SubjectRoute>()
+            SubjectDetailRoute(
+                subjectId = route.subjectId,
+                onClose = { if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack() },
+                onOpenExam = { examId -> navController.navigateToExam(examId = examId) },
+                onNewExam = { subjectId -> navController.navigateToExam(subjectId = subjectId) },
+            )
+        }
+        composable<ExamRoute> { entry ->
+            val route = entry.toRoute<ExamRoute>()
+            ExamEditorRoute(
+                examId = route.examId,
+                presetSubjectId = route.subjectId,
+                onClose = { if (navController.currentBackStackEntry?.id == entry.id) navController.popBackStack() },
+            )
+        }
+        // ===== END SECTION: NAV_HOST_PLANNER =====
     }
 }
 
@@ -168,5 +229,37 @@ fun NavHostController.navigateToDistractionShield() {
 /** Opens the task editor; [taskId] 0 creates a task. */
 fun NavHostController.navigateToTaskEditor(taskId: Long = 0L, dueToday: Boolean = false) {
     navigate(TaskEditorRoute(taskId = taskId, dueToday = dueToday)) { launchSingleTop = true }
+}
+
+/**
+ * Opens the timetable block editor: [blockId] edits, [duplicateOf] copies, neither creates a
+ * block (optionally at [date] and [startMinute]). [replaceCurrent] swaps out the editor on top.
+ */
+fun NavHostController.navigateToRoutineBlock(
+    blockId: Long = 0L,
+    duplicateOf: Long = 0L,
+    date: LocalDate? = null,
+    startMinute: Int? = null,
+    replaceCurrent: Boolean = false,
+) {
+    val route = RoutineBlockRoute(
+        blockId = blockId,
+        duplicateOf = duplicateOf,
+        epochDay = date?.toEpochDay() ?: RoutineBlockRoute.NO_EPOCH_DAY,
+        startMinute = startMinute ?: -1,
+    )
+    navigate(route) {
+        if (replaceCurrent) popUpTo<RoutineBlockRoute> { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
+fun NavHostController.navigateToSubject(subjectId: Long) {
+    navigate(SubjectRoute(subjectId = subjectId)) { launchSingleTop = true }
+}
+
+/** Opens the exam editor; [examId] 0 creates one, optionally for [subjectId]. */
+fun NavHostController.navigateToExam(examId: Long = 0L, subjectId: Long = 0L) {
+    navigate(ExamRoute(examId = examId, subjectId = subjectId)) { launchSingleTop = true }
 }
 // ===== END SECTION: NAV_CONTROLLER_EXTENSIONS =====

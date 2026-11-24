@@ -29,11 +29,14 @@ Each file has a header that names its source file and lists the changes made:
 | `core/designsystem/glass/shader/GlassShaderSources.kt` | library `internal/Shaders.kt` and catalog `utils/InteractiveHighlight.kt` (AGSL copied unchanged) |
 | `core/designsystem/glass/shader/CachedGlassEffects.kt` | library `effects/Lens.kt` and `highlight/HighlightStyle.kt` |
 
-## Material Symbols — Google
+## Material Symbols and Material Icons — Google
 
 - Source: https://github.com/google/material-design-icons
 - License: Apache License 2.0
 - Used as vector drawables in `app/src/main/res/drawable/ic_*.xml` (except the launcher icon files).
+  The Phase 04 icons (`ic_sleep`, `ic_break`, `ic_personal`, `ic_school`, `ic_exam`,
+  `ic_duplicate`, `ic_link`, `ic_warning`, `ic_edit`) are Material Icons paths on a 24-unit
+  viewport; the others are Material Symbols.
 
 ## Android Jetpack, Kotlin and kotlinx libraries
 

@@ -41,9 +41,10 @@ import com.kaushalkr.axiom.feature.tasks.labelRes
 
 // ===== SECTION: TASKS_HEADER =====
 /**
- * Fixed top of the task list: title with a New task button, a live summary, the glass search
- * field with filter and sort buttons, and the Today / Upcoming / Overdue / Done selector.
- * It stays put while the list scrolls, so no glass control sits over moving content.
+ * Fixed top of the task list: a live summary with a New task button, the glass search field
+ * with filter and sort buttons, and the Today / Upcoming / Overdue / Done selector. It sits
+ * under the Planner's section switcher and stays put while the list scrolls, so no glass
+ * control floats over moving content.
  */
 @Composable
 fun TasksHeader(
@@ -61,24 +62,20 @@ fun TasksHeader(
 ) {
     val colors = AxiomTheme.colors
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(AxiomSpacing.sm)) {
+        // The Planner's section switcher names the screen, so the header leads with the summary.
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AxiomSpacing.sm),
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(R.string.tasks_eyebrow).uppercase(),
-                    style = AxiomTheme.typography.labelMedium,
-                    color = colors.accent,
-                )
-                Text(
-                    text = stringResource(R.string.tasks_title),
-                    style = AxiomTheme.typography.headlineLarge,
-                    color = colors.textPrimary,
-                    modifier = Modifier.semantics { heading() },
-                )
-            }
+            Text(
+                text = summaryText(dueTodayCount, overdueCount),
+                style = AxiomTheme.typography.titleMedium,
+                color = colors.textPrimary,
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { heading() },
+            )
             GlassButton(
                 onClick = onNewTask,
                 tint = colors.accent,
@@ -88,11 +85,6 @@ fun TasksHeader(
                 Text(stringResource(R.string.tasks_new))
             }
         }
-        Text(
-            text = summaryText(dueTodayCount, overdueCount),
-            style = AxiomTheme.typography.bodyMedium,
-            color = colors.textSecondary,
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

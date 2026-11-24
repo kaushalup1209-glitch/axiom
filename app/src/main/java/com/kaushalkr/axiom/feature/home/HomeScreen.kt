@@ -23,6 +23,7 @@ import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 import com.kaushalkr.axiom.feature.home.components.DailyGoalCard
+import com.kaushalkr.axiom.feature.home.components.NextExamCard
 import com.kaushalkr.axiom.feature.home.components.QuickFocusCard
 import com.kaushalkr.axiom.feature.home.components.StreakCard
 import com.kaushalkr.axiom.feature.home.components.StudyStatTile
@@ -38,6 +39,9 @@ fun HomeDashboardRoute(
     onOpenPlanner: () -> Unit,
     onOpenTask: (taskId: Long) -> Unit,
     onAddTask: () -> Unit,
+    onOpenTimetable: () -> Unit,
+    onOpenBlock: (blockId: Long) -> Unit,
+    onOpenExam: (examId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
 ) {
@@ -67,6 +71,9 @@ fun HomeDashboardRoute(
         onOpenTask = onOpenTask,
         onAddTask = onAddTask,
         onOpenPlanner = onOpenPlanner,
+        onOpenTimetable = onOpenTimetable,
+        onOpenBlock = onOpenBlock,
+        onOpenExam = onOpenExam,
         modifier = modifier,
     )
     }
@@ -93,6 +100,9 @@ fun HomeScreen(
     onOpenTask: (Long) -> Unit,
     onAddTask: () -> Unit,
     onOpenPlanner: () -> Unit,
+    onOpenTimetable: () -> Unit,
+    onOpenBlock: (Long) -> Unit,
+    onOpenExam: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isWide = LocalAxiomWidthClass.current.isWide
@@ -129,12 +139,23 @@ fun HomeScreen(
                 onOpenPlanner = onOpenPlanner,
                 modifier = Modifier.fillMaxWidth(),
             )
-            StreakCard(streak = dashboard.streak, modifier = Modifier.fillMaxWidth())
             TodayRoutineCard(
-                routine = dashboard.plannerPreview.routine,
-                currentTime = dashboard.currentTime,
+                routine = dashboard.routine,
+                currentMinute = dashboard.currentMinute,
+                onOpenBlock = onOpenBlock,
+                onOpenTimetable = onOpenTimetable,
                 modifier = Modifier.fillMaxWidth(),
             )
+            val nextExam = dashboard.nextExam
+            if (nextExam != null) {
+                NextExamCard(
+                    exam = nextExam,
+                    today = dashboard.today,
+                    onOpenExam = onOpenExam,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            StreakCard(streak = dashboard.streak, modifier = Modifier.fillMaxWidth())
         }
     }
 

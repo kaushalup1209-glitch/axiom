@@ -15,30 +15,45 @@ com.kaushalkr.axiom
 │   ├── AxiomApp.kt                  Root layout: captured screen, floating chrome, overlay host
 │   └── MainActivityViewModel.kt     Settings + Battery Saver + device caps → GlassResolution
 ├── core/
-│   ├── di/AppContainer.kt           Manual DI (DataStore, Room, repositories, task actions, undo, time)
+│   ├── di/AppContainer.kt           Manual DI (DataStore, Room, repositories, task/routine/academic actions,
+│   │                                AI command executors, undo, time)
 │   ├── model/                       AppearanceSettings, StudyPreferences + StudyDefaults, FocusSession,
-│   │                                Task (+ TaskPriority, TaskRecurrence, Subtask, TaskDraft, TaskLimits)
+│   │                                Task (+ TaskPriority, TaskRecurrence, Subtask, TaskDraft, TaskLimits),
+│   │                                Routine (RoutineBlock, RoutineKind, Weekdays, RoutineAutomation,
+│   │                                RoutineBlockDraft, RoutineLimits), Academic (Subject, Chapter,
+│   │                                Exam, ExamKind, ExamDraft, AcademicLimits)
 │   ├── domain/
 │   │   ├── StudyStreakCalculator.kt   Pure streak rules
 │   │   ├── UndoController.kt          App-wide undo events shown by GlassUndoSnackbarHost
-│   │   └── task/
-│   │       ├── TaskActions.kt             Complete / reopen / delete / move / save, with undo, in the app scope
-│   │       ├── TaskRecurrenceCalculator.kt   Next due date for repeating tasks (missed ones skipped)
-│   │       ├── TaskCommand.kt             AI-ready commands + TaskCommandExecutor + TaskSummary
-│   │       └── TaskDraftMapping.kt        Task → editable TaskDraft
+│   │   ├── task/
+│   │   │   ├── TaskActions.kt             Complete / reopen / delete / move / save, with undo, in the app scope
+│   │   │   ├── TaskRecurrenceCalculator.kt   Next due date for repeating tasks (missed ones skipped)
+│   │   │   ├── TaskCommand.kt             AI-ready commands + TaskCommandExecutor + TaskSummary
+│   │   │   └── TaskDraftMapping.kt        Task → editable TaskDraft
+│   │   ├── routine/
+│   │   │   ├── RoutineSchedule.kt         Pure timetable rules: occurrences per day (incl. past midnight),
+│   │   │   │                              side-by-side lanes, now/next, free slots, planned minutes
+│   │   │   ├── RoutineConflictDetector.kt Overlaps over the next 8 days + one-off dates; move/shorten fixes
+│   │   │   ├── RoutineActions.kt          Save / move / delete blocks with undo, in the app scope
+│   │   │   └── RoutineCommand.kt          AI-ready timetable + academic commands and RoutineCommandExecutor
+│   │   └── academic/
+│   │       ├── ExamCountdown.kt           Days until, upcoming, past, next
+│   │       └── AcademicActions.kt         Delete subject / chapter / exam with undo; tick and reorder chapters
 │   ├── data/
 │   │   ├── appearance/AppearanceRepository.kt   Theme, glass, tint, motion preferences
 │   │   ├── study/StudyPreferencesRepository.kt  Name, daily goal, quick-start length
 │   │   ├── focus/                   FocusSessionRepository (active session in DataStore, history in Room), entity, DAO
 │   │   ├── task/                    TaskRepository, TaskDao, TaskEntity / SubtaskEntity
-│   │   ├── database/AxiomDatabase.kt   Room database v2 (schemas exported to app/schemas)
-│   │   └── sample/PlannerPreviewData.kt   PLACEHOLDER routine until Phase 04
+│   │   ├── routine/                 RoutineRepository, RoutineDao, RoutineBlockEntity / RoutineTaskLinkEntity
+│   │   ├── academic/                SubjectRepository, ExamRepository, DAOs, Subject / Chapter / Exam entities
+│   │   └── database/AxiomDatabase.kt   Room database v3 (schemas exported to app/schemas)
 │   ├── platform/
 │   │   ├── GlassDeviceCapability.kt  API level, low-RAM flag and total memory
 │   │   ├── PowerSaveModeMonitor.kt   Battery Saver as a Flow
 │   │   └── TimeProvider.kt           Wall clock + aligned tickers (replaceable in tests)
 │   ├── designsystem/
-│   │   ├── theme/                    AxiomColors, AxiomTypography, AxiomDimens, AxiomTheme
+│   │   ├── theme/                    AxiomColors, AxiomTypography, AxiomDimens, AxiomTheme,
+│   │   │                             PlannerPalette (subject colours, routine kind colours)
 │   │   ├── layout/AxiomWindowLayout.kt   Width classes, screen content padding
 │   │   ├── motion/
 │   │   │   ├── AxiomMotion.kt            Motion tokens + scheme scaled by the animation scale setting
@@ -59,13 +74,15 @@ com.kaushalkr.axiom
 │   │       GlassSegmentedControl, GlassDialog, GlassOverlayHost,
 │   │       GlassBottomSheet, GlassTextField, GlassSearchField, GlassUndoSnackbarHost,
 │   │       AxiomBackground, AxiomScreenColumn, ScreenHeader, AxiomIconBadge, AxiomPill,
-│   │       AxiomChip, AxiomTextField, AxiomMonthCalendar, StatusBarScrim
+│   │       AxiomChip, AxiomTextField, AxiomMonthCalendar (stateful) + AxiomMonthGrid
+│   │       (stateless, with per-day marks), AxiomLinearProgress, AxiomProgressRing, StatusBarScrim
 │   └── ui/                           App-specific shared UI
 │       ├── FeaturePlaceholderScreen.kt   Phase 01 placeholder layout
 │       ├── reorder/ReorderableListState.kt   Long-press drag-to-reorder for LazyColumn
 │       └── AxiomAppMark.kt
 ├── navigation/
-│   ├── AxiomRoutes.kt               Type-safe @Serializable routes (incl. TaskEditorRoute)
+│   ├── AxiomRoutes.kt               Type-safe @Serializable routes (incl. TaskEditorRoute,
+│   │                                RoutineBlockRoute, SubjectRoute, ExamRoute)
 │   ├── TopLevelDestination.kt       Five tabs: label, icon, route
 │   ├── AxiomNavHost.kt              Graph, transitions, navigate helpers
 │   ├── AxiomNavigationBar.kt        Floating Liquid Glass tab bar
@@ -76,8 +93,10 @@ com.kaushalkr.axiom
     │   ├── HomeViewModel.kt          Minute-tick dashboard state, second-tick focus clock
     │   ├── HomeUiState.kt, HomeFormatting.kt, HomeTaskSummary.kt (real task stats)
     │   └── components/               DailyGoalCard, QuickFocusCard, StudyStatTile, StreakCard,
-    │                                 TodayRoutineCard, TodayTasksCard, HomeCardHeader
-    ├── planner/PlannerScreen.kt      Planner tab; hosts the task list
+    │                                 TodayRoutineCard, NextExamCard, TodayTasksCard, HomeCardHeader
+    ├── planner/
+    │   ├── PlannerScreen.kt          Planner tab: Tasks | Routine | Academics switcher over the section
+    │   └── PlannerSection.kt
     ├── tasks/
     │   ├── TasksScreen.kt            TaskListRoute (stateful) + TasksScreen: fixed header over a LazyColumn
     │   ├── TasksViewModel.kt         View, search, filter, sort; list built off the main thread
@@ -91,6 +110,24 @@ com.kaushalkr.axiom
     │       └── components/           EditorSectionCard, EditorFieldLabel, TaskDeadlineCard,
     │                                 TaskPriorityEffortCard, TaskSubtasksCard, SubjectSuggestions,
     │                                 TaskDateSheet, TaskTimeSheet
+    ├── routine/
+    │   ├── RoutineScreen.kt          RoutineRoute: header + day timeline / week overview / month calendar
+    │   ├── RoutineViewModel.kt       View, selected date, drag moves; UI built off the main thread
+    │   ├── RoutineModels.kt, RoutineFormatting.kt
+    │   ├── components/               RoutineHeader, DayTimeline, RoutineTimelineBlock, DayAgendaHeader,
+    │   │                             WeekOverview, WeekDayCard, MonthOverview
+    │   └── editor/
+    │       ├── RoutineBlockEditorScreen.kt   RoutineBlockEditorRoute: form, sheets, conflict sheet, discard
+    │       ├── RoutineBlockEditorViewModel.kt   Create / edit / duplicate, live conflict check
+    │       └── components/           RoutineKindCard, RoutineTimeCard, RoutineDaysCard,
+    │                                 RoutineLinkedTasksCard, TaskLinkSheet, RoutineAutomationCard,
+    │                                 RoutineConflictBanner, RoutineConflictSheet
+    ├── academics/
+    │   ├── AcademicsScreen.kt        AcademicsRoute: summary, exams with countdowns, subjects
+    │   ├── AcademicsViewModel.kt
+    │   ├── components/               ExamCountdownRow, SubjectProgressRow, SubjectSheet
+    │   ├── subject/                  SubjectDetailRoute + view model; components/ChapterRow
+    │   └── exam/                     ExamEditorRoute + view model
     ├── focus/FocusScreen.kt
     ├── insights/InsightsScreen.kt
     ├── assistant/AssistantScreen.kt          (AI tab)
@@ -159,8 +196,10 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
 
 ## Data rules
 
-- **Real vs placeholder data:** placeholder content lives only in `core/data/sample/` and is
-  labelled "Preview" wherever it is shown. `HomeDashboardUiState` documents which fields are real.
+- **Real vs placeholder data:** placeholder content, when a phase needs it, lives only in
+  `core/data/sample/` and is labelled "Preview" wherever it is shown. Since Phase 04 no sample
+  data remains: the Home routine card shows real timetable blocks. `HomeDashboardUiState`
+  documents which fields are real (distraction time stays null until Phase 06).
 - **Focus timing** is derived from stored timestamps (`ActiveFocusSession`), so it stays exact in
   the background or after the process is killed, without a service. A session that passed its
   planned end is completed when Home next opens. Sessions under one minute are discarded.
@@ -170,11 +209,32 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
   undo removes it again. Manual order is a fractional `sort_order`, so a drag writes one row.
   Views: Today = due today, Upcoming = due later or no date, Overdue = due before today,
   Done = the latest 300 completed, grouped by completion day.
+- **Routines** are stored in Room v3 (`routine_blocks`, `routine_task_links`; additive 2→3
+  auto-migration together with the academic tables). A routine is a repeating block: `days_mask`
+  holds the weekdays (bit 0 = Monday); 0 means a one-off block on `date` (an epoch day). Times are minutes
+  after midnight; a block may end after midnight (`start + duration > 1440`) and then also shows
+  as a continuation the next morning. Dragging moves every occurrence of a block.
+  `routine_task_links` has a foreign key to the block only (cascade); reads join `tasks`, so a
+  deleted task drops out and comes back with its undo.
+- **Conflicts:** `RoutineConflictDetector` checks the next 8 days (one full week of weekdays)
+  plus upcoming one-off dates. The editor shows overlaps live and on save offers: move to the next
+  free start, shorten to fit, or keep both.
+- **Academics:** `subjects`, `chapters` (cascade on subject) and `exams` (subject set to null when
+  the subject is deleted). Tasks keep their subject as text; renaming a subject also renames it on
+  its tasks. Deleting a subject, chapter, exam or block is undoable.
+- **Later-phase hooks:** each block stores `auto_start_focus`, `track_distractions` and
+  `restrict_apps`. `RoutineSchedule.now` returns the ongoing and next blocks, and
+  `RoutineOccurrence.elapsedMinutes` / `remainingMinutes` give their timing, for automatic focus
+  sessions (Phase 05) and Distraction Shield (Phases 06–08).
 - **Undo** runs through `UndoController` in the application scope, so an undo offered by a screen
   that has closed (the editor) still works from the snackbar.
 - **AI preparation:** the assistant should call `AppContainer.taskCommandExecutor` with
   `TaskCommand`s (`create_task`, `update_task`, `reschedule_task`, `complete_task`, `delete_task`,
   `list_open_tasks`). `needsConfirmation` marks the ones to confirm with the user first.
+  Timetables and academics go through `AppContainer.routineCommandExecutor` with
+  `RoutineCommand`s (`create_routine_block`, `update_routine_block`, `reschedule_routine_block`,
+  `delete_routine_block`, `list_routine`, `find_free_time`, `create_subject`, `add_chapters`,
+  `create_exam`). Overlapping saves are reported back unless the command sets `allowOverlap`.
 - **Glass recommendation:** with no manual choice (new installs, or after Reset appearance),
   `GlassModeResolver.recommend` picks Lite, or Off on low-RAM devices, phones under ~3 GB memory
   and Android 9 or older. Full is never chosen automatically. Settings shows the recommendation
@@ -197,6 +257,13 @@ Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Bat
   and build them on `Dispatchers.Default`. Task rows use `GlassTokens.ListItem` (no drop or depth
   shadow) and never host glass. Keep glass controls in fixed headers rather than floating over a
   scrolling list.
+- Timetable: blocks, week-day cards and chapter rows use `GlassTokens.ListItem` and never host
+  glass. Glass controls sit in the fixed Routine header (view switcher, previous/next, New block)
+  and the month calendar card. The day timeline draws its hour grid in one draw call and places
+  blocks by time; a drag offset is applied in a graphics layer, so dragging never relayouts the
+  timeline. Short blocks get a minimum height and overlapping blocks share the width in lanes, so
+  text never stacks. The week view shows up to 5 blocks per day plus "+N more"; the month view
+  shows dots per day instead of blocks.
 - In lazy lists, do not keep gesture state such as a swipe-to-dismiss state in `rememberSaveable`:
   the list restores it by key, so a re-added row would come back already dismissed.
 

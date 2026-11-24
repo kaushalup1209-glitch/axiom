@@ -5,9 +5,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
+import com.kaushalkr.axiom.core.data.academic.ExamRepository
+import com.kaushalkr.axiom.core.data.academic.SubjectRepository
 import com.kaushalkr.axiom.core.data.appearance.AppearanceRepository
 import com.kaushalkr.axiom.core.data.database.AxiomDatabase
 import com.kaushalkr.axiom.core.data.focus.FocusSessionRepository
+import com.kaushalkr.axiom.core.data.routine.RoutineRepository
+import com.kaushalkr.axiom.core.domain.academic.AcademicActions
+import com.kaushalkr.axiom.core.domain.routine.RoutineActions
+import com.kaushalkr.axiom.core.domain.routine.RoutineCommandExecutor
 import com.kaushalkr.axiom.core.data.study.StudyPreferencesRepository
 import com.kaushalkr.axiom.core.data.task.TaskRepository
 import com.kaushalkr.axiom.core.domain.UndoController
@@ -71,6 +77,23 @@ class AppContainer(context: Context) {
 
     /** Entry point for the AI assistant (Phase 11) to run structured task commands. */
     val taskCommandExecutor: TaskCommandExecutor by lazy { TaskCommandExecutor(taskRepository, taskActions) }
+
+    val subjectRepository: SubjectRepository by lazy { SubjectRepository(database, timeProvider) }
+
+    val examRepository: ExamRepository by lazy { ExamRepository(database, timeProvider) }
+
+    val routineRepository: RoutineRepository by lazy { RoutineRepository(database, timeProvider) }
+
+    val routineActions: RoutineActions by lazy { RoutineActions(routineRepository, undoController, applicationScope) }
+
+    val academicActions: AcademicActions by lazy {
+        AcademicActions(subjectRepository, examRepository, undoController, applicationScope)
+    }
+
+    /** Entry point for the AI assistant (Phase 11) to create and reschedule routines, subjects and exams. */
+    val routineCommandExecutor: RoutineCommandExecutor by lazy {
+        RoutineCommandExecutor(routineRepository, subjectRepository, examRepository, routineActions)
+    }
 
     val powerSaveModeMonitor: PowerSaveModeMonitor by lazy {
         PowerSaveModeMonitor(appContext)
