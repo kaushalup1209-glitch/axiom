@@ -4,7 +4,8 @@
  * Copyright 2025 Kyant. Licensed under the Apache License, Version 2.0 (see THIRD_PARTY_NOTICES.md).
  * Changes for Axiom: Boolean state API, theme colours, Full/Lite/Off effect switching,
  * gesture area enlarged to the whole control with a 48dp touch target, switch semantics
- * for accessibility, and section labels. Thumb rendering and springs are unchanged.
+ * for accessibility, values moved to GlassThumbTokens, springs scaled by the user's
+ * animation scale, and section labels. Thumb rendering and 1x spring values are unchanged.
  */
 package com.kaushalkr.axiom.core.designsystem.components
 
@@ -42,10 +43,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.lerp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassThumbTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.glass.glassBackdropSource
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.DampedDragAnimation
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 import com.kyant.backdrop.backdrops.rememberBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
@@ -72,6 +75,7 @@ fun GlassToggle(
     contentDescription: String? = null,
 ) {
     val style = LocalGlassStyle.current
+    val motion = LocalAxiomMotion.current
     val colors = AxiomTheme.colors
     val accentColor = colors.accent
     val trackColor = colors.controlTrack
@@ -89,14 +93,15 @@ fun GlassToggle(
     var fraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
 
     // ===== SECTION: GLASS_TOGGLE_DRAG_ANIMATION =====
-    val dampedDragAnimation = remember(animationScope) {
+    val dampedDragAnimation = remember(animationScope, motion) {
         DampedDragAnimation(
             animationScope = animationScope,
             initialValue = fraction,
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            pressedScale = 1.5f,
+            pressedScale = GlassThumbTokens.PRESSED_SCALE,
+            motion = motion,
             onDragStarted = {},
             onDragStopped = {
                 if (didDrag) {
@@ -191,12 +196,13 @@ fun GlassToggle(
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress) * style.blurScale)
+                        blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
                         if (style.usesRefraction) {
+                            val refraction = GlassThumbTokens.TogglePressedRefraction
                             lens(
-                                5f.dp.toPx() * progress,
-                                10f.dp.toPx() * progress,
-                                chromaticAberration = true,
+                                refraction.height.toPx() * progress,
+                                refraction.amount.toPx() * progress,
+                                chromaticAberration = refraction.chromaticAberration,
                             )
                         }
                     },
@@ -221,7 +227,7 @@ fun GlassToggle(
                     innerShadow = {
                         val progress = dampedDragAnimation.pressProgress
                         InnerShadow(
-                            radius = 4f.dp * progress,
+                            radius = GlassThumbTokens.PressedInnerShadowRadius * progress,
                             alpha = if (style.isEnabled) progress else 0f,
                         )
                     },

@@ -2,12 +2,13 @@
  * Interaction and deformation logic adapted from Kyant0/AndroidLiquidGlass:
  *   app/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/LiquidButton.kt
  * Copyright 2025 Kyant. Licensed under the Apache License, Version 2.0 (see THIRD_PARTY_NOTICES.md).
- * Changes for Axiom: theme-driven colours, Full/Lite/Off rendering through glassSurface,
- * enabled state, configurable shape and padding, content colour, and section labels.
+ * Changes for Axiom: theme-driven colours, token-driven glass through glassSurface
+ * (Full/Lite/Off), smoother scaled press springs, press deformation in every glass mode
+ * instead of a ripple, enabled state, configurable shape and padding, content colour,
+ * and section labels.
  */
 package com.kaushalkr.axiom.core.designsystem.components
 
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,13 +34,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.lerp
-import com.kaushalkr.axiom.core.designsystem.glass.GlassRefraction
+import com.kaushalkr.axiom.core.designsystem.glass.GlassPressTokens
+import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.glass.glassSurface
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.InteractiveHighlight
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
-import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -49,11 +51,13 @@ import kotlin.math.tanh
 
 // ===== SECTION: GLASS_BUTTON =====
 /**
- * Liquid Glass button. In Full and Lite glass it stretches toward the finger and glows on
- * press (from the Backdrop catalog `LiquidButton`); with glass off it uses a ripple.
+ * Liquid Glass button. On press it grows gently, stretches toward the finger and glows
+ * (from the Backdrop catalog `LiquidButton`), then eases back with a soft spring. The same
+ * press motion runs with glass off, on a solid surface.
  *
  * @param tint fills the button with a colour wash, e.g. the accent for primary actions.
  * @param contentColor colour for text and icons; defaults to on-accent when [tint] is set.
+ * @param floating true for chrome over content: uses [GlassTokens.FloatingButton] and chrome tint.
  */
 @Composable
 fun GlassButton(
@@ -69,15 +73,17 @@ fun GlassButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val style = LocalGlassStyle.current
+    val motion = LocalAxiomMotion.current
     val colors = AxiomTheme.colors
     val backdrop = LocalGlassBackdrop.current
-    val isInteractive = enabled && style.isEnabled
 
     val animationScope = rememberCoroutineScope()
-    val interactiveHighlight = remember(animationScope, style.usesInteractiveLight) {
+    val interactiveHighlight = remember(animationScope, style.usesInteractiveLight, motion) {
         InteractiveHighlight(
             animationScope = animationScope,
             useShader = style.usesInteractiveLight,
+            motion = motion,
+            flatGlowAlpha = GlassPressTokens.FLAT_GLOW_ALPHA,
         )
     }
 
@@ -89,21 +95,21 @@ fun GlassButton(
 
     // ===== SECTION: GLASS_BUTTON_DEFORMATION =====
     val deformationLayerBlock: (GraphicsLayerScope.() -> Unit)? =
-        if (isInteractive) {
+        if (enabled) {
             {
                 val width = size.width
                 val height = size.height
 
                 val progress = interactiveHighlight.pressProgress
-                val scale = lerp(1f, 1f + 4f.dp.toPx() / size.height, progress)
+                val scale = lerp(1f, 1f + GlassPressTokens.Growth.toPx() / size.height, progress)
 
                 val maxOffset = size.minDimension
-                val initialDerivative = 0.05f
+                val initialDerivative = GlassPressTokens.FOLLOW_DERIVATIVE
                 val offset = interactiveHighlight.offset
                 translationX = maxOffset * tanh(initialDerivative * offset.x / maxOffset)
                 translationY = maxOffset * tanh(initialDerivative * offset.y / maxOffset)
 
-                val maxDragScale = 4f.dp.toPx() / size.height
+                val maxDragScale = GlassPressTokens.MaxStretch.toPx() / size.height
                 val offsetAngle = atan2(offset.y, offset.x)
                 scaleX =
                     scale +
@@ -125,24 +131,21 @@ fun GlassButton(
             .glassSurface(
                 backdrop = backdrop,
                 style = style,
+                spec = if (floating) GlassTokens.FloatingButton else GlassTokens.Button,
                 shape = shape,
-                blurRadius = 2.dp,
-                refraction = GlassRefraction(height = 12.dp, amount = 24.dp),
                 surfaceColor = if (floating) style.chromeSurfaceColor else style.surfaceColor,
                 tint = tint,
-                shadow = if (floating) Shadow.Default else Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.06f)),
-                fallbackElevation = if (floating) 6.dp else 0.dp,
                 layerBlock = deformationLayerBlock,
             )
             .clickable(
                 enabled = enabled,
                 interactionSource = null,
-                indication = if (isInteractive) null else LocalIndication.current,
+                indication = null,
                 role = Role.Button,
                 onClick = onClick,
             )
             .then(
-                if (isInteractive) {
+                if (enabled) {
                     Modifier
                         .then(interactiveHighlight.modifier)
                         .then(interactiveHighlight.gestureModifier)

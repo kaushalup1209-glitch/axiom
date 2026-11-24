@@ -1,6 +1,7 @@
 package com.kaushalkr.axiom.core.data.appearance
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.AppearanceSettings
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.model.ThemeMode
@@ -42,6 +43,7 @@ class AppearanceRepositoryTest {
         repository.setGlassMode(GlassMode.LITE)
         repository.setGlassTintStrength(0.8f)
         repository.setAdaptGlassToBatterySaver(false)
+        repository.setAnimationScale(AnimationScale.ONE_AND_HALF)
 
         assertEquals(
             AppearanceSettings(
@@ -49,6 +51,7 @@ class AppearanceRepositoryTest {
                 glassMode = GlassMode.LITE,
                 glassTintStrength = 0.8f,
                 adaptGlassToBatterySaver = false,
+                animationScale = AnimationScale.ONE_AND_HALF,
             ),
             repository.settings.first(),
         )
@@ -68,6 +71,7 @@ class AppearanceRepositoryTest {
         val repository = createRepository()
         repository.setThemeMode(ThemeMode.LIGHT)
         repository.setGlassMode(GlassMode.OFF)
+        repository.setAnimationScale(AnimationScale.OFF)
         repository.resetAppearance()
         assertEquals(AppearanceSettings(), repository.settings.first())
     }

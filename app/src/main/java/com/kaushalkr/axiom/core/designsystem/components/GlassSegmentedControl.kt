@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 
 // ===== SECTION: GLASS_SEGMENTED_CONTROL =====
@@ -31,6 +32,7 @@ fun GlassSegmentedControl(
         containerColor = colors.controlTrack,
         indicatorColor = colors.segmentIndicator,
         floating = false,
+        spec = GlassTokens.SegmentedControl,
     ) {
         options.forEachIndexed { index, label ->
             GlassTab(

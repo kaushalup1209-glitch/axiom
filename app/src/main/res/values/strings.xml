@@ -143,19 +143,27 @@
     <string name="settings_glass_tint_desc">More tint makes text on glass easier to read.</string>
     <string name="settings_adapt_battery">Adapt to Battery Saver</string>
     <string name="settings_adapt_battery_desc">Use Lite glass while Battery Saver is on.</string>
+    <string name="settings_section_motion">Motion</string>
+    <string name="settings_animation_scale">Animation scale</string>
+    <string name="settings_animation_scale_desc">Speeds up or slows down Axiom\'s animations, like Android\'s animation scale. Off removes motion.</string>
+    <string name="animation_scale_off">Off</string>
+    <string name="animation_scale_half">0.5×</string>
+    <string name="animation_scale_normal">1×</string>
+    <string name="animation_scale_one_and_half">1.5×</string>
+    <string name="animation_scale_double">2×</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version_and_developer">Version %1$s · %2$s</string>
     <string name="settings_licenses">Open-source licenses</string>
     <string name="settings_licenses_desc">Liquid Glass, icons and libraries</string>
     <string name="settings_reset_appearance">Reset appearance</string>
-    <string name="settings_reset_appearance_desc">Restore theme and glass defaults</string>
+    <string name="settings_reset_appearance_desc">Restore theme, glass and motion defaults</string>
     <!-- ===== END SECTION: STRINGS_SETTINGS ===== -->
 
     <!-- ===== SECTION: STRINGS_DIALOGS ===== -->
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_close">Close</string>
     <string name="dialog_reset_title">Reset appearance?</string>
-    <string name="dialog_reset_message">Theme, glass effects, tint and Battery Saver behaviour return to their defaults.</string>
+    <string name="dialog_reset_message">Theme, glass effects, tint, Battery Saver behaviour and animation scale return to their defaults.</string>
     <string name="dialog_reset_confirm">Reset</string>
     <string name="dialog_licenses_title">Open-source licenses</string>
     <string name="dialog_licenses_message">Liquid Glass rendering uses Backdrop and Shapes by Kyant (Apache License 2.0). The glass button, toggle, slider and tab bar are adapted from the Backdrop catalog app (Apache License 2.0).\n\nIcons are Material Symbols by Google (Apache License 2.0). Built with Android Jetpack and Kotlin (Apache License 2.0).</string>

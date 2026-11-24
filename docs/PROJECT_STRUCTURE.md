@@ -24,7 +24,11 @@ com.kaushalkr.axiom
 │   ├── designsystem/
 │   │   ├── theme/                    AxiomColors, AxiomTypography, AxiomDimens, AxiomTheme
 │   │   ├── layout/AxiomWindowLayout.kt   Width classes, screen content padding
+│   │   ├── motion/
+│   │   │   ├── AxiomMotion.kt            Motion tokens + scheme scaled by the animation scale setting
+│   │   │   └── AxiomPressIndication.kt   Soft press overlay that replaces the Material ripple
 │   │   ├── glass/
+│   │   │   ├── GlassTokens.kt            All glass parameters: surfaces, indicator, thumbs, tint, background
 │   │   │   ├── GlassModeResolver.kt      Caps requested mode by device and power state
 │   │   │   ├── GlassStyle.kt             Per-mode rendering parameters + CompositionLocals
 │   │   │   ├── GlassBackdrops.kt         LocalGlassBackdrop, capture helpers
@@ -79,11 +83,22 @@ Rules that keep this correct:
   screen, and dialogs are shown through `GlassOverlayHost`.
 - Components never check the glass mode themselves beyond reading `LocalGlassStyle`.
 
-| Mode | Captures backdrops | Blur | Lens refraction | Interactive light | Surfaces |
-|---|---|---|---|---|---|
-| Full | yes | yes | yes, with dispersion on indicators | RuntimeShader | tinted glass |
-| Lite | yes | yes (1.5× radius) | no | flat glow | stronger tint |
-| Off | no | no | no | none | opaque + hairline border |
+| Mode | Captures backdrops | Blur | Lens refraction | Depth shadow | Rim light + sheen | Interactive light | Surfaces |
+|---|---|---|---|---|---|---|---|
+| Full | yes | yes | yes (wide rim, depth; dispersion on chrome) | yes | yes | RuntimeShader | tinted glass |
+| Lite | yes | yes (1.5× radius) | no | no | yes | flat glow | stronger tint |
+| Off | no | no | no | no | no | flat glow | opaque + hairline border |
+
+### Where to tune
+
+- **Glass look:** `GlassTokens.kt`. One `GlassSurfaceSpec` per surface kind (`Card`, `Dialog`,
+  `Button`, `FloatingButton`, `NavigationBar`, `SegmentedControl`), plus indicator, thumb, press,
+  background-texture and tint tokens. Components never hard-code glass values.
+- **Motion:** `AxiomMotionTokens` in `AxiomMotion.kt`. Every spring and tween is defined there at
+  1x. `AxiomMotion` scales them by the Settings animation scale (tween durations × scale, spring
+  stiffness ÷ scale², Off = snap). The Liquid Glass drag springs keep the Backdrop catalog values.
+- Stationary refraction is visible because the ambient background carries orbs and a tiled dot
+  texture (`GlassBackgroundTokens`); a featureless background would hide the lens.
 
 `GlassModeResolver` lowers the requested mode when the device cannot render it:
 Android 11 and lower → Off, Android 12 → Lite, low-RAM devices → Lite, Battery Saver (when

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.AppearanceSettings
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.model.ThemeMode
@@ -51,12 +52,17 @@ class AppearanceRepository(
         dataStore.edit { it[Keys.ADAPT_TO_BATTERY_SAVER] = enabled }
     }
 
+    suspend fun setAnimationScale(animationScale: AnimationScale) {
+        dataStore.edit { it[Keys.ANIMATION_SCALE] = animationScale.name }
+    }
+
     suspend fun resetAppearance() {
         dataStore.edit { preferences ->
             preferences.remove(Keys.THEME_MODE)
             preferences.remove(Keys.GLASS_MODE)
             preferences.remove(Keys.GLASS_TINT_STRENGTH)
             preferences.remove(Keys.ADAPT_TO_BATTERY_SAVER)
+            preferences.remove(Keys.ANIMATION_SCALE)
         }
     }
     // ===== END SECTION: APPEARANCE_REPOSITORY_WRITE =====
@@ -69,6 +75,7 @@ class AppearanceRepository(
             glassMode = enumValueOrDefault(this[Keys.GLASS_MODE], defaults.glassMode),
             glassTintStrength = (this[Keys.GLASS_TINT_STRENGTH] ?: defaults.glassTintStrength).coerceIn(0f, 1f),
             adaptGlassToBatterySaver = this[Keys.ADAPT_TO_BATTERY_SAVER] ?: defaults.adaptGlassToBatterySaver,
+            animationScale = enumValueOrDefault(this[Keys.ANIMATION_SCALE], defaults.animationScale),
         )
     }
 
@@ -80,6 +87,7 @@ class AppearanceRepository(
         val GLASS_MODE = stringPreferencesKey("glass_mode")
         val GLASS_TINT_STRENGTH = floatPreferencesKey("glass_tint_strength")
         val ADAPT_TO_BATTERY_SAVER = booleanPreferencesKey("adapt_glass_to_battery_saver")
+        val ANIMATION_SCALE = stringPreferencesKey("animation_scale")
     }
     // ===== END SECTION: APPEARANCE_REPOSITORY_MAPPING =====
 

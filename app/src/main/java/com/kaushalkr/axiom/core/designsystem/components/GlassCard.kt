@@ -10,8 +10,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
-import com.kaushalkr.axiom.core.designsystem.glass.GlassRefraction
+import com.kaushalkr.axiom.core.designsystem.glass.GlassSurfaceSpec
+import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.glass.backdropOrEmpty
@@ -19,7 +19,6 @@ import com.kaushalkr.axiom.core.designsystem.glass.glassSurface
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.RoundedRectangle
 
 // ===== SECTION: GLASS_CARD =====
@@ -29,11 +28,16 @@ import com.kyant.shapes.RoundedRectangle
  * The card exports its own rendered surface as the backdrop for its children, so glass
  * controls placed inside (toggles, sliders, buttons) refract the card instead of the
  * screen behind it.
+ *
+ * @param spec glass appearance; dialogs pass [GlassTokens.Dialog].
+ * @param surfaceColor tint over the backdrop; defaults to the card tint.
  */
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedRectangle(AxiomDimens.cardCornerRadius),
+    spec: GlassSurfaceSpec = GlassTokens.Card,
+    surfaceColor: Color = LocalGlassStyle.current.surfaceColor,
     contentPadding: PaddingValues = PaddingValues(AxiomSpacing.lg),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable ColumnScope.() -> Unit,
@@ -47,10 +51,9 @@ fun GlassCard(
             .glassSurface(
                 backdrop = backdrop,
                 style = style,
+                spec = spec,
                 shape = shape,
-                blurRadius = 12.dp,
-                refraction = GlassRefraction(height = 12.dp, amount = 24.dp),
-                shadow = Shadow(radius = 24.dp, color = Color.Black.copy(alpha = 0.06f)),
+                surfaceColor = surfaceColor,
                 exportedBackdrop = if (style.isEnabled) cardBackdrop else null,
             )
             .padding(contentPadding),

@@ -1,7 +1,6 @@
 package com.kaushalkr.axiom.navigation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -17,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kaushalkr.axiom.R
 import com.kaushalkr.axiom.core.designsystem.components.GlassIconButton
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 
@@ -33,6 +34,11 @@ fun AxiomTopActions(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val motion = LocalAxiomMotion.current
+    val enter = fadeIn(motion.tween(AxiomMotionTokens.ChromeFadeIn)) +
+        scaleIn(motion.spring(AxiomMotionTokens.ChromeShow), initialScale = AxiomMotionTokens.CHROME_HIDDEN_SCALE)
+    val exit = fadeOut(motion.tween(AxiomMotionTokens.ChromeFadeOut)) +
+        scaleOut(motion.tween(AxiomMotionTokens.ChromeHide), targetScale = AxiomMotionTokens.CHROME_HIDDEN_SCALE)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -41,8 +47,8 @@ fun AxiomTopActions(
         AnimatedVisibility(
             visible = !isTopLevel,
             modifier = Modifier.align(Alignment.CenterStart),
-            enter = fadeIn(tween(200)) + scaleIn(initialScale = 0.8f),
-            exit = fadeOut(tween(150)) + scaleOut(targetScale = 0.8f),
+            enter = enter,
+            exit = exit,
         ) {
             GlassIconButton(
                 onClick = onNavigateBack,
@@ -53,8 +59,8 @@ fun AxiomTopActions(
         AnimatedVisibility(
             visible = isTopLevel,
             modifier = Modifier.align(Alignment.CenterEnd),
-            enter = fadeIn(tween(200)) + scaleIn(initialScale = 0.8f),
-            exit = fadeOut(tween(150)) + scaleOut(targetScale = 0.8f),
+            enter = enter,
+            exit = exit,
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(AxiomSpacing.xs)) {
                 GlassIconButton(

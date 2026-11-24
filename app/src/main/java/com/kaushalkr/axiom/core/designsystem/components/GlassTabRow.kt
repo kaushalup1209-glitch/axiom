@@ -5,14 +5,15 @@
  * Changes for Axiom: Int selection API that reports only user-initiated changes (no
  * feedback loop with navigation), configurable heights and container colour so the same
  * component drives the floating navigation bar and segmented controls, theme colours,
- * Full/Lite/Off effect switching, and section labels. Rendering, drag physics and the
- * refracting indicator are unchanged.
+ * Full/Lite/Off effect switching, a stronger resting container (wider lens rim, depth,
+ * dispersion, rim light, sheen and inner shadow from GlassTokens), values moved to tokens,
+ * springs scaled by the user's animation scale, and section labels. Pressed and dragged
+ * rendering and the 1x drag physics are unchanged.
  */
 package com.kaushalkr.axiom.core.designsystem.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -48,10 +49,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassIndicatorTokens
+import com.kaushalkr.axiom.core.designsystem.glass.GlassSurfaceSpec
+import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
+import com.kaushalkr.axiom.core.designsystem.glass.glassColorControls
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.DampedDragAnimation
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.InteractiveHighlight
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
@@ -59,7 +66,6 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
@@ -82,6 +88,7 @@ import kotlin.math.sign
  * @param onTabSelected called only when the user selects a different tab by dragging the
  *   indicator. Tab clicks are handled by each [GlassTab].
  * @param floating true for chrome that floats over content (adds shadow and chrome tint).
+ * @param spec resting glass of the container; segmented controls pass [GlassTokens.SegmentedControl].
  */
 @Composable
 fun GlassTabRow(
@@ -94,9 +101,11 @@ fun GlassTabRow(
     containerColor: Color = Color.Unspecified,
     indicatorColor: Color = Color.Unspecified,
     floating: Boolean = true,
+    spec: GlassSurfaceSpec = GlassTokens.NavigationBar,
     content: @Composable RowScope.() -> Unit,
 ) {
     val style = LocalGlassStyle.current
+    val motion = LocalAxiomMotion.current
     val colors = AxiomTheme.colors
     val backdrop = LocalGlassBackdrop.current
     val isLightTheme = !colors.isDark
@@ -115,6 +124,13 @@ fun GlassTabRow(
 
     val tabsBackdrop = rememberLayerBackdrop()
 
+    // ===== SECTION: GLASS_TAB_ROW_RESTING_GLASS =====
+    val containerHighlight = spec.edgeLight.toHighlight()
+    val containerInnerShadow = if (style.usesRefraction) spec.depth?.toInnerShadow(style.isDark) else null
+    val containerSheen = spec.sheenBrush(style.isDark)
+    val containerRefraction = if (style.usesRefraction) spec.refraction else null
+    // ===== END SECTION: GLASS_TAB_ROW_RESTING_GLASS =====
+
     BoxWithConstraints(
         modifier.semantics { selectableGroup() },
         contentAlignment = Alignment.CenterStart,
@@ -129,7 +145,7 @@ fun GlassTabRow(
             derivedStateOf {
                 val fraction = (offsetAnimation.value / constraints.maxWidth).fastCoerceIn(-1f, 1f)
                 with(density) {
-                    4f.dp.toPx() * fraction.sign * EaseOut.transform(abs(fraction))
+                    GlassIndicatorTokens.PanelOffsetMax.toPx() * fraction.sign * EaseOut.transform(abs(fraction))
                 }
             }
         }
@@ -138,14 +154,15 @@ fun GlassTabRow(
         val animationScope = rememberCoroutineScope()
 
         // ===== SECTION: GLASS_TAB_ROW_DRAG_ANIMATION =====
-        val dampedDragAnimation = remember(animationScope, tabsCount, tabWidth) {
+        val dampedDragAnimation = remember(animationScope, tabsCount, tabWidth, motion) {
             DampedDragAnimation(
                 animationScope = animationScope,
                 initialValue = latestSelectedIndex.toFloat(),
                 valueRange = 0f..(tabsCount - 1).toFloat(),
                 visibilityThreshold = 0.001f,
                 initialScale = 1f,
-                pressedScale = 78f / 56f,
+                pressedScale = GlassIndicatorTokens.PRESSED_SCALE,
+                motion = motion,
                 onDragStarted = {},
                 onDragStopped = {
                     val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
@@ -153,7 +170,7 @@ fun GlassTabRow(
                     animationScope.launch {
                         offsetAnimation.animateTo(
                             0f,
-                            spring(1f, 300f, 0.5f),
+                            motion.spring(AxiomMotionTokens.DragPanelReturn, 0.5f),
                         )
                     }
                     if (targetIndex != latestSelectedIndex) {
@@ -181,10 +198,15 @@ fun GlassTabRow(
         }
         // ===== END SECTION: GLASS_TAB_ROW_DRAG_ANIMATION =====
 
-        val interactiveHighlight = remember(animationScope, dampedDragAnimation, style.usesInteractiveLight) {
+        val interactiveHighlight = remember(animationScope, dampedDragAnimation, style.usesInteractiveLight, motion) {
             InteractiveHighlight(
                 animationScope = animationScope,
                 useShader = style.usesInteractiveLight,
+                motion = motion,
+                // Catalog springs keep the tab swipe light exactly as before.
+                pressSpring = AxiomMotionTokens.CatalogHighlightPress,
+                releaseSpring = AxiomMotionTokens.CatalogHighlightPress,
+                followSpring = AxiomMotionTokens.CatalogHighlightFollow,
                 position = { size, _ ->
                     Offset(
                         if (isLtr) (dampedDragAnimation.value + 0.5f) * tabWidth + panelOffset
@@ -208,22 +230,31 @@ fun GlassTabRow(
                     shape = { Capsule() },
                     effects = {
                         if (style.isEnabled) {
-                            vibrancy()
-                            blur(8f.dp.toPx() * style.blurScale)
+                            glassColorControls(style.isDark)
+                            blur(spec.blurRadius.toPx() * style.blurScale)
                         }
-                        if (style.usesRefraction) {
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        if (containerRefraction != null) {
+                            lens(
+                                containerRefraction.height.toPx(),
+                                containerRefraction.amount.toPx(),
+                                depthEffect = containerRefraction.depthEffect,
+                                chromaticAberration = containerRefraction.chromaticAberration,
+                            )
                         }
                     },
-                    highlight = if (style.isEnabled) ({ Highlight.Default }) else null,
-                    shadow = if (floating) ({ Shadow.Default }) else null,
+                    highlight = if (style.isEnabled) ({ containerHighlight }) else null,
+                    shadow = if (floating) spec.shadow?.let { value -> { value } } else null,
+                    innerShadow = containerInnerShadow?.let { value -> { value } },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
-                        val scale = lerp(1f, 1f + 16f.dp.toPx() / size.width, progress)
+                        val scale = lerp(1f, 1f + GlassIndicatorTokens.PressedContainerGrowth.toPx() / size.width, progress)
                         scaleX = scale
                         scaleY = scale
                     },
-                    onDrawSurface = { drawRect(resolvedContainerColor) },
+                    onDrawSurface = {
+                        drawRect(resolvedContainerColor)
+                        if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
+                    },
                 )
                 .then(highlightModifier)
                 .height(containerHeight)
@@ -237,7 +268,7 @@ fun GlassTabRow(
         // ===== SECTION: GLASS_TAB_ROW_TINTED_CONTENT =====
         CompositionLocalProvider(
             LocalGlassTabScale provides {
-                lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
+                lerp(1f, GlassIndicatorTokens.PRESSED_CONTENT_SCALE, dampedDragAnimation.pressProgress)
             },
         ) {
             Row(
@@ -254,13 +285,16 @@ fun GlassTabRow(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             if (style.isEnabled) {
-                                vibrancy()
-                                blur(8f.dp.toPx() * style.blurScale)
+                                glassColorControls(style.isDark)
+                                blur(spec.blurRadius.toPx() * style.blurScale)
                             }
-                            if (style.usesRefraction) {
+                            if (containerRefraction != null) {
+                                // At rest the indicator shows the same rim bend as the container;
+                                // fully pressed it reaches the catalog lens used while swiping.
+                                val pressed = GlassIndicatorTokens.TintedContentPressedRefraction
                                 lens(
-                                    24f.dp.toPx() * progress,
-                                    24f.dp.toPx() * progress,
+                                    lerp(containerRefraction.height.toPx(), pressed.height.toPx(), progress),
+                                    lerp(containerRefraction.amount.toPx(), pressed.amount.toPx(), progress),
                                 )
                             }
                         },
@@ -270,6 +304,7 @@ fun GlassTabRow(
                         },
                         onDrawSurface = {
                             drawRect(resolvedContainerColor)
+                            if (style.isEnabled && containerSheen != null) drawRect(containerSheen)
                             // Custom indicator fill (segmented controls): painted into this hidden
                             // copy at the indicator position, so it sits beneath the accent label
                             // the indicator shows. Full glass fades it on press into a clear lens.
@@ -317,10 +352,11 @@ fun GlassTabRow(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         if (style.usesRefraction) {
+                            val pressed = GlassIndicatorTokens.PressedRefraction
                             lens(
-                                10f.dp.toPx() * progress,
-                                14f.dp.toPx() * progress,
-                                chromaticAberration = true,
+                                pressed.height.toPx() * progress,
+                                pressed.amount.toPx() * progress,
+                                chromaticAberration = pressed.chromaticAberration,
                             )
                         }
                     },
@@ -335,7 +371,7 @@ fun GlassTabRow(
                     innerShadow = {
                         val progress = dampedDragAnimation.pressProgress
                         InnerShadow(
-                            radius = 8f.dp * progress,
+                            radius = GlassIndicatorTokens.PressedInnerShadowRadius * progress,
                             alpha = if (style.isEnabled) progress else 0f,
                         )
                     },

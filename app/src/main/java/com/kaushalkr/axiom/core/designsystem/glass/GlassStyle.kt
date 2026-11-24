@@ -13,10 +13,12 @@ import com.kaushalkr.axiom.core.model.GlassMode
 /**
  * Rendering parameters for the effective [GlassMode]. Every glass component reads this
  * through [LocalGlassStyle], so switching Full, Lite and Off needs no per-screen code.
+ * Per-surface values live in [GlassTokens]; tint ranges in [GlassTintTokens].
  */
 @Immutable
 data class GlassStyle(
     val mode: GlassMode,
+    val isDark: Boolean,
     val tintStrength: Float,
     /** Tint drawn over the backdrop of cards and dialogs. */
     val surfaceColor: Color,
@@ -29,35 +31,38 @@ data class GlassStyle(
     /** True when backdrops are captured and drawn at all. */
     val isEnabled: Boolean get() = mode != GlassMode.OFF
 
-    /** Lens refraction and chromatic dispersion (RuntimeShader). */
+    /** Lens refraction, dispersion and inner depth shadows (RuntimeShader). */
     val usesRefraction: Boolean get() = mode == GlassMode.FULL
 
     /** Pointer-following light shader on press. */
     val usesInteractiveLight: Boolean get() = mode == GlassMode.FULL
 
-    /** Lite slightly increases frost to compensate for the missing refraction. */
     val blurScale: Float
         get() = when (mode) {
             GlassMode.FULL -> 1f
-            GlassMode.LITE -> 1.5f
+            GlassMode.LITE -> GlassTintTokens.LITE_BLUR_SCALE
             GlassMode.OFF -> 0f
         }
+
+    /** Dialog tint: the card tint, raised to a readable minimum. */
+    val dialogSurfaceColor: Color
+        get() = surfaceColor.copy(alpha = maxOf(surfaceColor.alpha, GlassTintTokens.DIALOG_MIN_ALPHA))
 
     companion object {
         fun create(mode: GlassMode, tintStrength: Float, colors: AxiomColors): GlassStyle {
             val strength = tintStrength.coerceIn(0f, 1f)
-            val (minAlpha, maxAlpha) = when (mode) {
-                GlassMode.FULL -> 0.10f to 0.72f
-                GlassMode.LITE -> 0.28f to 0.86f
-                GlassMode.OFF -> 1f to 1f
-            }
-            val surfaceAlpha = lerp(minAlpha, maxAlpha, strength)
-            val chromeAlpha = lerp((minAlpha + 0.12f).coerceAtMost(1f), maxAlpha, strength)
+            val surfaceRange = GlassTintTokens.surfaceAlphaRange(mode)
+            val chromeRange = GlassTintTokens.chromeAlphaRange(mode)
             return GlassStyle(
                 mode = mode,
+                isDark = colors.isDark,
                 tintStrength = strength,
-                surfaceColor = colors.glassSurface.copy(alpha = surfaceAlpha),
-                chromeSurfaceColor = colors.glassSurface.copy(alpha = chromeAlpha),
+                surfaceColor = colors.glassSurface.copy(
+                    alpha = lerp(surfaceRange.start, surfaceRange.endInclusive, strength),
+                ),
+                chromeSurfaceColor = colors.glassSurface.copy(
+                    alpha = lerp(chromeRange.start, chromeRange.endInclusive, strength),
+                ),
                 solidSurfaceColor = colors.solidSurface,
                 solidBorderColor = colors.solidSurfaceBorder,
             )

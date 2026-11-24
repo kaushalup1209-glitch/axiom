@@ -8,7 +8,8 @@ Package: `com.kaushalkr.axiom`.
 ## Status
 
 Phase 01 (foundation and Liquid Glass design system) is complete. The five tabs, Distraction
-Shield and Settings exist; only Settings has working features (theme and glass preferences).
+Shield and Settings exist; only Settings has working features (theme, glass and animation
+scale preferences).
 Every other screen is a placeholder naming the phase that delivers it.
 
 ## Tech stack

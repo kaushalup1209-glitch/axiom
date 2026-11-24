@@ -3,8 +3,6 @@ package com.kaushalkr.axiom.core.designsystem.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +30,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassTokens
+import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
@@ -124,6 +126,8 @@ private fun GlassDialogLayout(
                 // Consume taps so touching the panel does not dismiss the dialog.
                 .pointerInput(Unit) { detectTapGestures { } },
             shape = RoundedRectangle(AxiomDimens.dialogCornerRadius),
+            spec = GlassTokens.Dialog,
+            surfaceColor = LocalGlassStyle.current.dialogSurfaceColor,
             contentPadding = PaddingValues(
                 start = AxiomSpacing.xl,
                 end = AxiomSpacing.xl,
@@ -177,13 +181,14 @@ private fun GlassDialogLayout(
 @Composable
 private fun Modifier.dialogEnterScale(): Modifier {
     val scope = LocalAnimatedVisibilityScope.current ?: return this
+    val motion = LocalAxiomMotion.current
     val scale by scope.transition.animateFloat(
         transitionSpec = {
-            if (targetState == EnterExitState.Visible) spring(dampingRatio = 0.7f, stiffness = 400f)
-            else tween(durationMillis = 140)
+            if (targetState == EnterExitState.Visible) motion.spring(AxiomMotionTokens.DialogIn)
+            else motion.tween(AxiomMotionTokens.DialogOut)
         },
         label = "GlassDialogScale",
-    ) { state -> if (state == EnterExitState.Visible) 1f else 0.9f }
+    ) { state -> if (state == EnterExitState.Visible) 1f else AxiomMotionTokens.DIALOG_HIDDEN_SCALE }
     return this.graphicsLayer {
         scaleX = scale
         scaleY = scale

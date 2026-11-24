@@ -1,6 +1,9 @@
 package com.kaushalkr.axiom.feature.settings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,8 +40,11 @@ import com.kaushalkr.axiom.core.designsystem.components.ScreenHeader
 import com.kaushalkr.axiom.core.designsystem.glass.GlassLimitation
 import com.kaushalkr.axiom.core.designsystem.glass.GlassResolution
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassResolution
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.AppearanceSettings
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.model.ThemeMode
@@ -66,6 +73,7 @@ fun SettingsRoute(
             onGlassModeChange = viewModel::setGlassMode,
             onGlassTintChange = viewModel::setGlassTintStrength,
             onAdaptToBatterySaverChange = viewModel::setAdaptGlassToBatterySaver,
+            onAnimationScaleChange = viewModel::setAnimationScale,
             onResetAppearance = viewModel::resetAppearance,
             modifier = modifier,
         )
@@ -82,11 +90,13 @@ fun SettingsScreen(
     onGlassModeChange: (GlassMode) -> Unit,
     onGlassTintChange: (Float) -> Unit,
     onAdaptToBatterySaverChange: (Boolean) -> Unit,
+    onAnimationScaleChange: (AnimationScale) -> Unit,
     onResetAppearance: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showResetDialog by rememberSaveable { mutableStateOf(false) }
     var showLicensesDialog by rememberSaveable { mutableStateOf(false) }
+    val motion = AxiomTheme.motion
 
     AxiomScreenColumn(modifier = modifier) {
         ScreenHeader(
@@ -102,8 +112,8 @@ fun SettingsScreen(
             GlassModeSetting(settings.glassMode, glassResolution, onGlassModeChange)
             AnimatedVisibility(
                 visible = glassResolution.effective != GlassMode.OFF,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
+                enter = motion.expandEnter(),
+                exit = motion.collapseExit(),
             ) {
                 Column {
                     SettingsDivider()
@@ -118,6 +128,10 @@ fun SettingsScreen(
                 checked = settings.adaptGlassToBatterySaver,
                 onCheckedChange = onAdaptToBatterySaverChange,
             )
+        }
+
+        SettingsSection(title = stringResource(R.string.settings_section_motion)) {
+            AnimationScaleSetting(settings.animationScale, onAnimationScaleChange)
         }
 
         SettingsSection(title = stringResource(R.string.settings_section_about)) {
@@ -225,12 +239,62 @@ private fun GlassModeSetting(
         style = AxiomTheme.typography.bodySmall,
         color = colors.textSecondary,
     )
-    if (limitationText != null) {
-        Spacer(Modifier.height(AxiomSpacing.sm))
-        SettingsInfoNote(text = limitationText)
+    // Keep the last note visible while it collapses away.
+    val lastLimitationText = remember { arrayOfNulls<String>(1) }
+    if (limitationText != null) lastLimitationText[0] = limitationText
+    val motion = AxiomTheme.motion
+    AnimatedVisibility(
+        visible = limitationText != null,
+        enter = motion.expandEnter(),
+        exit = motion.collapseExit(),
+    ) {
+        Column {
+            Spacer(Modifier.height(AxiomSpacing.sm))
+            SettingsInfoNote(text = limitationText ?: lastLimitationText[0].orEmpty())
+        }
     }
 }
 // ===== END SECTION: SETTINGS_GLASS_MODE =====
+
+// ===== SECTION: SETTINGS_ANIMATION_SCALE =====
+@Composable
+private fun AnimationScaleSetting(
+    animationScale: AnimationScale,
+    onAnimationScaleChange: (AnimationScale) -> Unit,
+) {
+    val options = listOf(
+        stringResource(R.string.animation_scale_off),
+        stringResource(R.string.animation_scale_half),
+        stringResource(R.string.animation_scale_normal),
+        stringResource(R.string.animation_scale_one_and_half),
+        stringResource(R.string.animation_scale_double),
+    )
+    SettingFieldLabel(stringResource(R.string.settings_animation_scale))
+    Spacer(Modifier.height(10.dp))
+    GlassSegmentedControl(
+        options = options,
+        selectedIndex = animationScale.ordinal,
+        onSelect = { index -> onAnimationScaleChange(AnimationScale.entries[index]) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.height(10.dp))
+    Text(
+        text = stringResource(R.string.settings_animation_scale_desc),
+        style = AxiomTheme.typography.bodySmall,
+        color = AxiomTheme.colors.textSecondary,
+    )
+}
+// ===== END SECTION: SETTINGS_ANIMATION_SCALE =====
+
+// ===== SECTION: SETTINGS_EXPAND_TRANSITIONS =====
+private fun AxiomMotion.expandEnter(): EnterTransition =
+    fadeIn(tween(AxiomMotionTokens.ExpandFade)) +
+        expandVertically(spring(AxiomMotionTokens.Expand, IntSize.VisibilityThreshold))
+
+private fun AxiomMotion.collapseExit(): ExitTransition =
+    fadeOut(tween(AxiomMotionTokens.ExpandFade)) +
+        shrinkVertically(spring(AxiomMotionTokens.Expand, IntSize.VisibilityThreshold))
+// ===== END SECTION: SETTINGS_EXPAND_TRANSITIONS =====
 
 // ===== SECTION: SETTINGS_GLASS_TINT =====
 @Composable

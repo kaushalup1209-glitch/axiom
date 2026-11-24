@@ -24,6 +24,20 @@ enum class GlassMode {
 }
 // ===== END SECTION: MODEL_GLASS_MODE =====
 
+// ===== SECTION: MODEL_ANIMATION_SCALE =====
+/**
+ * In-app animation duration multiplier, modelled on Android's developer animation scale.
+ * [OFF] removes motion entirely; other values stretch or shorten every Axiom animation.
+ */
+enum class AnimationScale(val factor: Float) {
+    OFF(0f),
+    HALF(0.5f),
+    NORMAL(1f),
+    ONE_AND_HALF(1.5f),
+    DOUBLE(2f),
+}
+// ===== END SECTION: MODEL_ANIMATION_SCALE =====
+
 // ===== SECTION: MODEL_APPEARANCE_SETTINGS =====
 /** Persisted appearance preferences. Defaults are the values applied on first launch and on reset. */
 data class AppearanceSettings(
@@ -33,6 +47,7 @@ data class AppearanceSettings(
     val glassTintStrength: Float = DEFAULT_GLASS_TINT_STRENGTH,
     /** When true, Battery Saver caps rendering at [GlassMode.LITE]. */
     val adaptGlassToBatterySaver: Boolean = true,
+    val animationScale: AnimationScale = AnimationScale.NORMAL,
 ) {
     companion object {
         const val DEFAULT_GLASS_TINT_STRENGTH = 0.5f

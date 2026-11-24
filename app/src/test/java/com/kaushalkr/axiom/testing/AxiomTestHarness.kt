@@ -8,6 +8,7 @@ import com.kaushalkr.axiom.app.AxiomApp
 import com.kaushalkr.axiom.core.designsystem.glass.GlassLimitation
 import com.kaushalkr.axiom.core.designsystem.glass.GlassResolution
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.GlassMode
 
 // ===== SECTION: TEST_HARNESS =====
@@ -16,10 +17,12 @@ import com.kaushalkr.axiom.core.model.GlassMode
 fun AxiomTestApp(
     glassMode: GlassMode,
     darkTheme: Boolean = false,
+    animationScale: AnimationScale = AnimationScale.NORMAL,
 ) {
     AxiomTheme(
         darkTheme = darkTheme,
         glassResolution = GlassResolution(glassMode, glassMode, GlassLimitation.NONE),
+        animationScale = animationScale,
     ) {
         AxiomApp()
     }

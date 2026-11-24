@@ -1,8 +1,7 @@
 package com.kaushalkr.axiom.app
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -50,6 +50,7 @@ import com.kaushalkr.axiom.core.designsystem.glass.glassBackdropSource
 import com.kaushalkr.axiom.core.designsystem.layout.AxiomWidthClass
 import com.kaushalkr.axiom.core.designsystem.layout.LocalAxiomWidthClass
 import com.kaushalkr.axiom.core.designsystem.layout.LocalScreenContentPadding
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomSpacing
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
@@ -81,6 +82,7 @@ fun AxiomApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val glassEnabled = AxiomTheme.glass.isEnabled
+    val motion = AxiomTheme.motion
     val backgroundBackdrop = rememberLayerBackdrop()
     val screenBackdrop = rememberLayerBackdrop()
     val overlayHostState = remember { GlassOverlayHostState() }
@@ -171,9 +173,10 @@ fun AxiomApp(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .then(underlyingSemantics),
-                    enter = slideInVertically(spring(dampingRatio = 0.8f, stiffness = 500f)) { it } +
-                        fadeIn(tween(200)),
-                    exit = slideOutVertically(tween(220)) { it } + fadeOut(tween(160)),
+                    enter = slideInVertically(motion.spring(AxiomMotionTokens.ChromeShow, IntOffset.VisibilityThreshold)) { it } +
+                        fadeIn(motion.tween(AxiomMotionTokens.ChromeFadeIn)),
+                    exit = slideOutVertically(motion.tween(AxiomMotionTokens.ChromeHide)) { it } +
+                        fadeOut(motion.tween(AxiomMotionTokens.ChromeFadeOut)),
                 ) {
                     AxiomNavigationBar(
                         selectedDestination = selectedTab,

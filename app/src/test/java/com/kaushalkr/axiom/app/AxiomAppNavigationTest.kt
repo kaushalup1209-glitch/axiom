@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kaushalkr.axiom.R
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.navigation.TopLevelDestination
 import com.kaushalkr.axiom.testing.AxiomTestApp
@@ -67,6 +69,34 @@ class AxiomAppNavigationTest {
     fun glassFull_allFiveTabsNavigate() {
         composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL) }
         assertTabsNavigate()
+    }
+
+    @Test
+    fun animationScaleOff_allFiveTabsNavigate() {
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL, animationScale = AnimationScale.OFF) }
+        assertTabsNavigate()
+    }
+
+    @Test
+    fun animationScaleDouble_allFiveTabsNavigate() {
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL, animationScale = AnimationScale.DOUBLE) }
+        assertTabsNavigate()
+    }
+
+    @Test
+    fun settings_animationScaleSelection_isPersisted() {
+        composeRule.setContent { AxiomTestApp(glassMode = GlassMode.FULL) }
+        composeRule.onNodeWithContentDescription(string(R.string.action_open_settings)).performClick()
+        composeRule.waitUntilExactlyOneExists(hasText(string(R.string.settings_animation_scale)), timeoutMillis = 5_000)
+
+        val doubleOption = hasText(string(R.string.animation_scale_double)) and isSelectable()
+        composeRule.onNode(doubleOption).performScrollTo().performClick()
+        composeRule.waitUntilExactlyOneExists(doubleOption and isSelected(), timeoutMillis = 5_000)
+
+        // Restore the default so other tests start from a clean preference.
+        val normalOption = hasText(string(R.string.animation_scale_normal)) and isSelectable()
+        composeRule.onNode(normalOption).performClick()
+        composeRule.waitUntilExactlyOneExists(normalOption and isSelected(), timeoutMillis = 5_000)
     }
 
     @Test

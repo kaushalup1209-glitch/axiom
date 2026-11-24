@@ -4,8 +4,9 @@
  * Copyright 2025 Kyant. Licensed under the Apache License, Version 2.0 (see THIRD_PARTY_NOTICES.md).
  * Changes for Axiom: value-based API with onValueChangeFinished, theme colours,
  * Full/Lite/Off effect switching, a 48dp gesture area covering the whole slider (tap to
- * jump, drag anywhere), slider semantics for accessibility, and section labels.
- * Thumb rendering and springs are unchanged.
+ * jump, drag anywhere), slider semantics for accessibility, values moved to
+ * GlassThumbTokens, springs scaled by the user's animation scale, and section labels.
+ * Thumb rendering and 1x spring values are unchanged.
  */
 package com.kaushalkr.axiom.core.designsystem.components
 
@@ -43,10 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
+import com.kaushalkr.axiom.core.designsystem.glass.GlassThumbTokens
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassBackdrop
 import com.kaushalkr.axiom.core.designsystem.glass.LocalGlassStyle
 import com.kaushalkr.axiom.core.designsystem.glass.glassBackdropSource
 import com.kaushalkr.axiom.core.designsystem.glass.interaction.DampedDragAnimation
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomDimens
 import com.kaushalkr.axiom.core.designsystem.theme.AxiomTheme
 import com.kyant.backdrop.backdrops.rememberBackdrop
@@ -77,6 +80,7 @@ fun GlassSlider(
     contentDescription: String? = null,
 ) {
     val style = LocalGlassStyle.current
+    val motion = LocalAxiomMotion.current
     val colors = AxiomTheme.colors
     val accentColor = colors.accent
     val trackColor = colors.controlTrack
@@ -104,14 +108,15 @@ fun GlassSlider(
         var pressPositionX by remember { mutableFloatStateOf(0f) }
 
         // ===== SECTION: GLASS_SLIDER_DRAG_ANIMATION =====
-        val dampedDragAnimation = remember(animationScope, trackWidth) {
+        val dampedDragAnimation = remember(animationScope, trackWidth, motion) {
             DampedDragAnimation(
                 animationScope = animationScope,
                 initialValue = latestValue,
                 valueRange = valueRange,
                 visibilityThreshold = visibilityThreshold,
                 initialScale = 1f,
-                pressedScale = 1.5f,
+                pressedScale = GlassThumbTokens.PRESSED_SCALE,
+                motion = motion,
                 onDragStarted = { position -> pressPositionX = position.x },
                 onDragStopped = {
                     if (didDrag) {
@@ -216,12 +221,13 @@ fun GlassSlider(
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress) * style.blurScale)
+                        blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
                         if (style.usesRefraction) {
+                            val refraction = GlassThumbTokens.SliderPressedRefraction
                             lens(
-                                10f.dp.toPx() * progress,
-                                14f.dp.toPx() * progress,
-                                chromaticAberration = true,
+                                refraction.height.toPx() * progress,
+                                refraction.amount.toPx() * progress,
+                                chromaticAberration = refraction.chromaticAberration,
                             )
                         }
                     },
@@ -246,7 +252,7 @@ fun GlassSlider(
                     innerShadow = {
                         val progress = dampedDragAnimation.pressProgress
                         InnerShadow(
-                            radius = 4f.dp * progress,
+                            radius = GlassThumbTokens.PressedInnerShadowRadius * progress,
                             alpha = if (style.isEnabled) progress else 0f,
                         )
                     },

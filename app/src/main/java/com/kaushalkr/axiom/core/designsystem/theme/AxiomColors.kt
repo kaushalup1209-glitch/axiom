@@ -34,6 +34,10 @@ data class AxiomColors(
     val segmentIndicator: Color,
     val divider: Color,
     val scrim: Color,
+    /** Peak colour of the soft press overlay that replaces ripples. */
+    val pressOverlay: Color,
+    /** Fine dot texture in the ambient background; makes refraction visible at rest. */
+    val backgroundTexture: Color,
 )
 // ===== END SECTION: AXIOM_COLORS_MODEL =====
 
@@ -59,6 +63,8 @@ val LightAxiomColors = AxiomColors(
     segmentIndicator = Color(0xEBFFFFFF),
     divider = Color(0x140E1117),
     scrim = Color(0x47202238),
+    pressOverlay = Color(0x0F0E1117),
+    backgroundTexture = Color(0x1A3A3F8F),
 )
 // ===== END SECTION: AXIOM_COLORS_LIGHT =====
 
@@ -84,6 +90,8 @@ val DarkAxiomColors = AxiomColors(
     segmentIndicator = Color(0x2EFFFFFF),
     divider = Color(0x14FFFFFF),
     scrim = Color(0x80000000),
+    pressOverlay = Color(0x1AFFFFFF),
+    backgroundTexture = Color(0x17C7CCFF),
 )
 // ===== END SECTION: AXIOM_COLORS_DARK =====
 

@@ -3,17 +3,23 @@ package com.kaushalkr.axiom.navigation
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 import com.kaushalkr.axiom.feature.assistant.AssistantScreen
 import com.kaushalkr.axiom.feature.focus.FocusScreen
 import com.kaushalkr.axiom.feature.home.HomeScreen
@@ -23,20 +29,35 @@ import com.kaushalkr.axiom.feature.settings.SettingsRoute
 import com.kaushalkr.axiom.feature.shield.DistractionShieldScreen
 
 // ===== SECTION: NAV_HOST =====
-/** App navigation graph. Tabs cross-fade; secondary screens slide in from the trailing edge. */
+/**
+ * App navigation graph. Tabs cross-fade with a slight scale; secondary screens slide in on a
+ * spring from the trailing edge while the screen underneath recedes and fades. All timing
+ * comes from [AxiomMotionTokens] at the user's animation scale.
+ */
 @Composable
 fun AxiomNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+    val motion = LocalAxiomMotion.current
+    val transitions = remember(motion) { AxiomNavTransitions(motion) }
+
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
         modifier = modifier,
-        enterTransition = { TabEnterTransition },
-        exitTransition = { TabExitTransition },
-        popEnterTransition = { TabEnterTransition },
-        popExitTransition = { TabExitTransition },
+        enterTransition = {
+            if (targetState.isSecondary()) transitions.pushEnter(this) else transitions.tabEnter
+        },
+        exitTransition = {
+            if (targetState.isSecondary()) transitions.underlayExit else transitions.tabExit
+        },
+        popEnterTransition = {
+            if (initialState.isSecondary()) transitions.underlayEnter else transitions.tabEnter
+        },
+        popExitTransition = {
+            if (initialState.isSecondary()) transitions.popExit(this) else transitions.tabExit
+        },
     ) {
         // ===== SECTION: NAV_HOST_TOP_LEVEL =====
         composable<HomeRoute> { HomeScreen() }
@@ -47,40 +68,58 @@ fun AxiomNavHost(
         // ===== END SECTION: NAV_HOST_TOP_LEVEL =====
 
         // ===== SECTION: NAV_HOST_SECONDARY =====
-        composable<DistractionShieldRoute>(
-            enterTransition = { secondaryEnter() },
-            popExitTransition = { secondaryPopExit() },
-        ) { DistractionShieldScreen() }
-        composable<SettingsRoute>(
-            enterTransition = { secondaryEnter() },
-            popExitTransition = { secondaryPopExit() },
-        ) { SettingsRoute() }
+        composable<DistractionShieldRoute> { DistractionShieldScreen() }
+        composable<SettingsRoute> { SettingsRoute() }
         // ===== END SECTION: NAV_HOST_SECONDARY =====
     }
 }
+
+private fun NavBackStackEntry.isSecondary(): Boolean = TopLevelDestination.from(destination) == null
 // ===== END SECTION: NAV_HOST =====
 
 // ===== SECTION: NAV_TRANSITIONS =====
-private val TabEnterTransition: EnterTransition =
-    fadeIn(tween(durationMillis = 220, delayMillis = 60)) +
-        scaleIn(initialScale = 0.985f, animationSpec = tween(durationMillis = 260, delayMillis = 60))
+/** Screen transitions built from motion tokens for one animation scale. */
+private class AxiomNavTransitions(private val motion: AxiomMotion) {
 
-private val TabExitTransition: ExitTransition =
-    fadeOut(tween(durationMillis = 120))
+    val tabEnter: EnterTransition =
+        fadeIn(motion.tween(AxiomMotionTokens.TabFadeIn)) +
+            scaleIn(
+                animationSpec = motion.tween(AxiomMotionTokens.TabFadeIn),
+                initialScale = AxiomMotionTokens.TAB_ENTER_SCALE,
+            )
 
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.secondaryEnter(): EnterTransition =
-    slideIntoContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.Start,
-        animationSpec = tween(durationMillis = 320),
-        initialOffset = { fullWidth -> fullWidth / 3 },
-    ) + fadeIn(tween(durationMillis = 240))
+    val tabExit: ExitTransition = fadeOut(motion.tween(AxiomMotionTokens.TabFadeOut))
 
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.secondaryPopExit(): ExitTransition =
-    slideOutOfContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.End,
-        animationSpec = tween(durationMillis = 280),
-        targetOffset = { fullWidth -> fullWidth / 3 },
-    ) + fadeOut(tween(durationMillis = 200))
+    /** The screen left underneath a pushed secondary screen. */
+    val underlayExit: ExitTransition =
+        fadeOut(motion.tween(AxiomMotionTokens.PushFadeOut)) +
+            scaleOut(
+                animationSpec = motion.tween(AxiomMotionTokens.PushFadeOut),
+                targetScale = AxiomMotionTokens.PUSH_UNDERLAY_SCALE,
+            )
+
+    /** The screen returning from underneath when a secondary screen is popped. */
+    val underlayEnter: EnterTransition =
+        fadeIn(motion.tween(AxiomMotionTokens.PushFadeIn)) +
+            scaleIn(
+                animationSpec = motion.tween(AxiomMotionTokens.PushFadeIn),
+                initialScale = AxiomMotionTokens.PUSH_UNDERLAY_SCALE,
+            )
+
+    fun pushEnter(scope: AnimatedContentTransitionScope<NavBackStackEntry>): EnterTransition =
+        scope.slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+            animationSpec = motion.spring(AxiomMotionTokens.PushSlide, IntOffset.VisibilityThreshold),
+            initialOffset = { fullWidth -> (fullWidth * AxiomMotionTokens.PUSH_OFFSET_FRACTION).toInt() },
+        ) + fadeIn(motion.tween(AxiomMotionTokens.PushFadeIn))
+
+    fun popExit(scope: AnimatedContentTransitionScope<NavBackStackEntry>): ExitTransition =
+        scope.slideOutOfContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.End,
+            animationSpec = motion.spring(AxiomMotionTokens.PushSlide, IntOffset.VisibilityThreshold),
+            targetOffset = { fullWidth -> (fullWidth * AxiomMotionTokens.PUSH_OFFSET_FRACTION).toInt() },
+        ) + fadeOut(motion.tween(AxiomMotionTokens.PushFadeOut))
+}
 // ===== END SECTION: NAV_TRANSITIONS =====
 
 // ===== SECTION: NAV_CONTROLLER_EXTENSIONS =====

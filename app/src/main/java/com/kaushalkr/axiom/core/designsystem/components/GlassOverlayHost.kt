@@ -2,7 +2,6 @@ package com.kaushalkr.axiom.core.designsystem.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.LocalAxiomMotion
 
 // ===== SECTION: GLASS_OVERLAY_HOST_STATE =====
 /**
@@ -60,6 +61,7 @@ fun GlassOverlayHost(
     state: GlassOverlayHostState,
     modifier: Modifier = Modifier,
 ) {
+    val motion = LocalAxiomMotion.current
     val current = state.content
     val lastContent = remember { arrayOfNulls<@Composable () -> Unit>(1) }
     if (current != null) lastContent[0] = current
@@ -67,8 +69,8 @@ fun GlassOverlayHost(
     AnimatedVisibility(
         visible = current != null,
         modifier = modifier,
-        enter = fadeIn(tween(durationMillis = 180)),
-        exit = fadeOut(tween(durationMillis = 160)),
+        enter = fadeIn(motion.tween(AxiomMotionTokens.ScrimIn)),
+        exit = fadeOut(motion.tween(AxiomMotionTokens.ScrimOut)),
     ) {
         CompositionLocalProvider(LocalAnimatedVisibilityScope provides this) {
             Box(Modifier.fillMaxSize()) {

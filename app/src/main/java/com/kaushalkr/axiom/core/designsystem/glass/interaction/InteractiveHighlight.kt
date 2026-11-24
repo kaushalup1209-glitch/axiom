@@ -4,15 +4,16 @@
  *
  * Adapted from Kyant0/AndroidLiquidGlass:
  *   app/src/commonMain/kotlin/com/kyant/backdrop/catalog/utils/InteractiveHighlight.kt
- * Changes for Axiom: package name, a [useShader] switch so Lite glass skips the
- * RuntimeShader light, and section labels. Shader source and springs are unchanged.
+ * Changes for Axiom: package name, a [useShader] switch so Lite and Off skip the
+ * RuntimeShader light, configurable press/release/follow springs scaled by the user's
+ * animation scale (buttons use smoother springs; the tab bar keeps the catalog springs),
+ * a configurable flat glow, and section labels. The shader source is unchanged.
  */
 package com.kaushalkr.axiom.core.designsystem.glass.interaction
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.spring
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -22,6 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.fastCoerceIn
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.SpringSpecValues
 import com.kyant.backdrop.RuntimeShader
 import com.kyant.backdrop.asComposeShader
 import com.kyant.backdrop.isRuntimeShaderSupported
@@ -32,17 +36,24 @@ import kotlinx.coroutines.launch
 /**
  * Press-and-follow light for glass surfaces. With [useShader] the light is a radial
  * RuntimeShader that tracks the finger; otherwise a flat additive glow is used.
+ * [pressProgress] and [offset] also drive the press deformation of glass buttons.
  */
 class InteractiveHighlight(
     val animationScope: CoroutineScope,
     val useShader: Boolean = true,
+    val motion: AxiomMotion = AxiomMotion.Default,
+    pressSpring: SpringSpecValues = AxiomMotionTokens.PressIn,
+    releaseSpring: SpringSpecValues = AxiomMotionTokens.PressRelease,
+    followSpring: SpringSpecValues = AxiomMotionTokens.PressFollow,
+    private val flatGlowAlpha: Float = 0.25f,
     val position: (size: Size, offset: Offset) -> Offset = { _, offset -> offset },
 ) {
 
-    private val pressProgressAnimationSpec =
-        spring(0.5f, 300f, 0.001f)
-    private val positionAnimationSpec =
-        spring(0.5f, 300f, Offset.VisibilityThreshold)
+    // ===== SECTION: GLASS_INTERACTIVE_HIGHLIGHT_SPECS =====
+    private val pressAnimationSpec = motion.spring(pressSpring, 0.001f)
+    private val releaseAnimationSpec = motion.spring(releaseSpring, 0.001f)
+    private val positionAnimationSpec = motion.spring(followSpring, Offset.VisibilityThreshold)
+    // ===== END SECTION: GLASS_INTERACTIVE_HIGHLIGHT_SPECS =====
 
     private val pressProgressAnimation =
         Animatable(0f, 0.001f)
@@ -101,7 +112,7 @@ half4 main(float2 coord) {
                     )
                 } else {
                     drawRect(
-                        Color.White.copy(0.25f * progress),
+                        Color.White.copy(flatGlowAlpha * progress),
                         blendMode = BlendMode.Plus,
                     )
                 }
@@ -118,24 +129,25 @@ half4 main(float2 coord) {
                 onDragStart = { down ->
                     startPosition = down.position
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(1f, pressAnimationSpec) }
                         launch { positionAnimation.snapTo(startPosition) }
                     }
                 },
                 onDragEnd = {
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(0f, releaseAnimationSpec) }
                         launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
                     }
                 },
                 onDragCancel = {
                     animationScope.launch {
-                        launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
+                        launch { pressProgressAnimation.animateTo(0f, releaseAnimationSpec) }
                         launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
                     }
                 },
             ) { change, _ ->
-                animationScope.launch { positionAnimation.snapTo(change.position) }
+                // Follow the finger through a spring so deformation flows instead of snapping.
+                animationScope.launch { positionAnimation.animateTo(change.position, positionAnimationSpec) }
             }
         }
     // ===== END SECTION: GLASS_INTERACTIVE_HIGHLIGHT_GESTURE =====

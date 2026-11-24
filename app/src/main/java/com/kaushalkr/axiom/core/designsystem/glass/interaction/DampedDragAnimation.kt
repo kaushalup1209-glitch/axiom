@@ -5,14 +5,13 @@
  * Adapted from Kyant0/AndroidLiquidGlass:
  *   app/src/commonMain/kotlin/com/kyant/backdrop/catalog/utils/DampedDragAnimation.kt
  * Changes for Axiom: package name, Android SystemClock as the velocity time source,
- * direct use of kotlinx.coroutines.android.awaitFrame, and section labels.
- * Spring values and animation behaviour are unchanged.
+ * direct use of kotlinx.coroutines.android.awaitFrame, spring values moved to
+ * AxiomMotionTokens (same values) and scaled by the user's animation scale, and section labels.
  */
 package com.kaushalkr.axiom.core.designsystem.glass.interaction
 
 import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -20,6 +19,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
+import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.filter
@@ -42,19 +43,20 @@ class DampedDragAnimation(
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
     val onDragStopped: DampedDragAnimation.() -> Unit,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+    val motion: AxiomMotion = AxiomMotion.Default,
 ) {
 
     // ===== SECTION: GLASS_DAMPED_DRAG_SPECS =====
     private val valueAnimationSpec =
-        spring(1f, 1000f, visibilityThreshold)
+        motion.spring(AxiomMotionTokens.DragValue, visibilityThreshold)
     private val velocityAnimationSpec =
-        spring(0.5f, 300f, visibilityThreshold * 10f)
+        motion.spring(AxiomMotionTokens.DragVelocity, visibilityThreshold * 10f)
     private val pressProgressAnimationSpec =
-        spring(1f, 1000f, 0.001f)
+        motion.spring(AxiomMotionTokens.DragPress, 0.001f)
     private val scaleXAnimationSpec =
-        spring(0.6f, 250f, 0.001f)
+        motion.spring(AxiomMotionTokens.DragScaleX, 0.001f)
     private val scaleYAnimationSpec =
-        spring(0.7f, 250f, 0.001f)
+        motion.spring(AxiomMotionTokens.DragScaleY, 0.001f)
     // ===== END SECTION: GLASS_DAMPED_DRAG_SPECS =====
 
     private val valueAnimation =

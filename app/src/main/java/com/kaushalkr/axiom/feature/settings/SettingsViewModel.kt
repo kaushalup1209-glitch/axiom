@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kaushalkr.axiom.AxiomApplication
 import com.kaushalkr.axiom.core.data.appearance.AppearanceRepository
+import com.kaushalkr.axiom.core.model.AnimationScale
 import com.kaushalkr.axiom.core.model.AppearanceSettings
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kaushalkr.axiom.core.model.ThemeMode
@@ -45,6 +46,10 @@ class SettingsViewModel(
 
     fun setAdaptGlassToBatterySaver(enabled: Boolean) {
         viewModelScope.launch { appearanceRepository.setAdaptGlassToBatterySaver(enabled) }
+    }
+
+    fun setAnimationScale(animationScale: AnimationScale) {
+        viewModelScope.launch { appearanceRepository.setAnimationScale(animationScale) }
     }
 
     fun resetAppearance() {

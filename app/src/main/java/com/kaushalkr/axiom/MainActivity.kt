@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
                     darkTheme = darkTheme,
                     glassResolution = readyState.glassResolution,
                     glassTintStrength = readyState.settings.glassTintStrength,
+                    animationScale = readyState.settings.animationScale,
                 ) {
                     AxiomApp()
                 }
