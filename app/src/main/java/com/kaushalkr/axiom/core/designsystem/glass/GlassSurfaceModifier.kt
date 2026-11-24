@@ -16,7 +16,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
+import com.kaushalkr.axiom.core.designsystem.glass.shader.cachedLens
 
 // ===== SECTION: GLASS_SURFACE_MODIFIER =====
 /**
@@ -80,7 +80,7 @@ fun Modifier.glassSurface(
             glassColorControls(style.isDark)
             blur((spec.blurRadius * style.blurScale).toPx())
             if (refraction != null) {
-                lens(
+                cachedLens(
                     refraction.height.toPx(),
                     refraction.amount.toPx(),
                     depthEffect = refraction.depthEffect,

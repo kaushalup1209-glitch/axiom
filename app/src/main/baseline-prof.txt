@@ -1,0 +1,11 @@
+# ===== SECTION: BASELINE_PROFILE_RULES =====
+# Ahead-of-time compile all Axiom and Liquid Glass code on install, so the first presses,
+# drags and screen transitions do not run interpreted or wait for JIT. Compose, Navigation
+# and other AndroidX libraries ship their own profiles, which AGP merges automatically.
+HSPLcom/kaushalkr/axiom/**;->**(**)**
+Lcom/kaushalkr/axiom/**;
+HSPLcom/kyant/backdrop/**;->**(**)**
+Lcom/kyant/backdrop/**;
+HSPLcom/kyant/shapes/**;->**(**)**
+Lcom/kyant/shapes/**;
+# ===== END SECTION: BASELINE_PROFILE_RULES =====

@@ -55,8 +55,8 @@ import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
+import com.kaushalkr.axiom.core.designsystem.glass.shader.cachedLens
+import com.kaushalkr.axiom.core.designsystem.glass.shader.CachedHighlights
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
@@ -96,7 +96,8 @@ fun GlassToggle(
     val dampedDragAnimation = remember(animationScope, motion) {
         DampedDragAnimation(
             animationScope = animationScope,
-            initialValue = fraction,
+            // Read the parameter, not the `fraction` state, so dragging never recomposes.
+            initialValue = if (checked) 1f else 0f,
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
@@ -199,7 +200,7 @@ fun GlassToggle(
                         blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
                         if (style.usesRefraction) {
                             val refraction = GlassThumbTokens.TogglePressedRefraction
-                            lens(
+                            cachedLens(
                                 refraction.height.toPx() * progress,
                                 refraction.amount.toPx() * progress,
                                 chromaticAberration = refraction.chromaticAberration,
@@ -209,9 +210,9 @@ fun GlassToggle(
                     highlight = {
                         val progress = dampedDragAnimation.pressProgress
                         if (style.isEnabled) {
-                            Highlight.Ambient.copy(
-                                width = Highlight.Ambient.width / 1.5f,
-                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                            CachedHighlights.Ambient.copy(
+                                width = CachedHighlights.Ambient.width / 1.5f,
+                                blurRadius = CachedHighlights.Ambient.blurRadius / 1.5f,
                                 alpha = progress,
                             )
                         } else {

@@ -26,6 +26,7 @@ com.kaushalkr.axiom
 │   │   ├── layout/AxiomWindowLayout.kt   Width classes, screen content padding
 │   │   ├── motion/
 │   │   │   ├── AxiomMotion.kt            Motion tokens + scheme scaled by the animation scale setting
+│   │   │   ├── ContinuousSpring.kt       Retargetable frame-driven spring (no restart stalls)
 │   │   │   └── AxiomPressIndication.kt   Soft press overlay that replaces the Material ripple
 │   │   ├── glass/
 │   │   │   ├── GlassTokens.kt            All glass parameters: surfaces, indicator, thumbs, tint, background
@@ -33,6 +34,7 @@ com.kaushalkr.axiom
 │   │   │   ├── GlassStyle.kt             Per-mode rendering parameters + CompositionLocals
 │   │   │   ├── GlassBackdrops.kt         LocalGlassBackdrop, capture helpers
 │   │   │   ├── GlassSurfaceModifier.kt   Modifier.glassSurface (Full / Lite / Off)
+│   │   │   ├── shader/                   Shared compiled lens and highlight shaders (GlassShaderCache)
 │   │   │   └── interaction/              DampedDragAnimation, InteractiveHighlight, gestures
 │   │   └── components/               One reusable component per file:
 │   │       GlassCard, GlassButton, GlassIconButton, GlassToggle, GlassSlider,
@@ -97,6 +99,11 @@ Rules that keep this correct:
 - **Motion:** `AxiomMotionTokens` in `AxiomMotion.kt`. Every spring and tween is defined there at
   1x. `AxiomMotion` scales them by the Settings animation scale (tween durations × scale, spring
   stiffness ÷ scale², Off = snap). The Liquid Glass drag springs keep the Backdrop catalog values.
+- **Press, release and drag springs** use `ContinuousSpring`: a new target only redirects the running
+  spring, so velocity carries through and there is no idle frame. Do not drive per-event animation
+  with `Animatable.animateTo`, which restarts and holds for one frame each time.
+- **Shaders:** always use `cachedLens` and `CachedHighlights` instead of the library's `lens` and
+  `Highlight.Default/Ambient`; they share one compiled shader app-wide (prewarmed at start-up).
 - Stationary refraction is visible because the ambient background carries orbs and a tiled dot
   texture (`GlassBackgroundTokens`); a featureless background would hide the lens.
 

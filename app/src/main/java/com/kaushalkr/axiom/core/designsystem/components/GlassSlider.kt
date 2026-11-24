@@ -57,8 +57,8 @@ import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
+import com.kaushalkr.axiom.core.designsystem.glass.shader.cachedLens
+import com.kaushalkr.axiom.core.designsystem.glass.shader.CachedHighlights
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
@@ -224,7 +224,7 @@ fun GlassSlider(
                         blur(GlassThumbTokens.RestBlur.toPx() * (1f - progress) * style.blurScale)
                         if (style.usesRefraction) {
                             val refraction = GlassThumbTokens.SliderPressedRefraction
-                            lens(
+                            cachedLens(
                                 refraction.height.toPx() * progress,
                                 refraction.amount.toPx() * progress,
                                 chromaticAberration = refraction.chromaticAberration,
@@ -234,9 +234,9 @@ fun GlassSlider(
                     highlight = {
                         val progress = dampedDragAnimation.pressProgress
                         if (style.isEnabled) {
-                            Highlight.Ambient.copy(
-                                width = Highlight.Ambient.width / 1.5f,
-                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                            CachedHighlights.Ambient.copy(
+                                width = CachedHighlights.Ambient.width / 1.5f,
+                                blurRadius = CachedHighlights.Ambient.blurRadius / 1.5f,
                                 alpha = progress,
                             )
                         } else {

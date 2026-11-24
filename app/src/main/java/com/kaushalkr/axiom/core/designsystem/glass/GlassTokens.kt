@@ -9,8 +9,8 @@ import androidx.compose.ui.unit.dp
 import com.kaushalkr.axiom.core.model.GlassMode
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.effects.colorControls
+import com.kaushalkr.axiom.core.designsystem.glass.shader.CachedHighlights
 import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 
@@ -36,16 +36,8 @@ data class GlassEdgeLight(
     val angle: Float = 45f,
     val falloff: Float = 1f,
 ) {
-    fun toHighlight(alpha: Float = 1f): Highlight = Highlight(
-        width = width,
-        blurRadius = width / 2f,
-        alpha = alpha,
-        style = HighlightStyle.Default(
-            color = Color.White.copy(alpha = intensity),
-            angle = angle,
-            falloff = falloff,
-        ),
-    )
+    fun toHighlight(alpha: Float = 1f): Highlight =
+        CachedHighlights.edge(width = width, intensity = intensity, angle = angle, falloff = falloff, alpha = alpha)
 }
 
 /** Inner shadow that gives glass visible thickness. Rendered only in Full glass. */

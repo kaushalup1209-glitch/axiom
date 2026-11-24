@@ -65,8 +65,8 @@ import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
+import com.kaushalkr.axiom.core.designsystem.glass.shader.cachedLens
+import com.kaushalkr.axiom.core.designsystem.glass.shader.CachedHighlights
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
@@ -234,7 +234,7 @@ fun GlassTabRow(
                             blur(spec.blurRadius.toPx() * style.blurScale)
                         }
                         if (containerRefraction != null) {
-                            lens(
+                            cachedLens(
                                 containerRefraction.height.toPx(),
                                 containerRefraction.amount.toPx(),
                                 depthEffect = containerRefraction.depthEffect,
@@ -292,7 +292,7 @@ fun GlassTabRow(
                                 // At rest the indicator shows the same rim bend as the container;
                                 // fully pressed it reaches the catalog lens used while swiping.
                                 val pressed = GlassIndicatorTokens.TintedContentPressedRefraction
-                                lens(
+                                cachedLens(
                                     lerp(containerRefraction.height.toPx(), pressed.height.toPx(), progress),
                                     lerp(containerRefraction.amount.toPx(), pressed.amount.toPx(), progress),
                                 )
@@ -300,7 +300,7 @@ fun GlassTabRow(
                         },
                         highlight = {
                             val progress = dampedDragAnimation.pressProgress
-                            if (style.isEnabled) Highlight.Default.copy(alpha = progress) else null
+                            if (style.isEnabled) CachedHighlights.Default.copy(alpha = progress) else null
                         },
                         onDrawSurface = {
                             drawRect(resolvedContainerColor)
@@ -353,7 +353,7 @@ fun GlassTabRow(
                         val progress = dampedDragAnimation.pressProgress
                         if (style.usesRefraction) {
                             val pressed = GlassIndicatorTokens.PressedRefraction
-                            lens(
+                            cachedLens(
                                 pressed.height.toPx() * progress,
                                 pressed.amount.toPx() * progress,
                                 chromaticAberration = pressed.chromaticAberration,
@@ -362,7 +362,7 @@ fun GlassTabRow(
                     },
                     highlight = {
                         val progress = dampedDragAnimation.pressProgress
-                        if (style.isEnabled) Highlight.Default.copy(alpha = progress) else null
+                        if (style.isEnabled) CachedHighlights.Default.copy(alpha = progress) else null
                     },
                     shadow = {
                         val progress = dampedDragAnimation.pressProgress

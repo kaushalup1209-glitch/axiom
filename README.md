@@ -37,6 +37,7 @@ Requires the Android SDK with `platforms;android-37.2` and `build-tools;37.0.0`.
 ./gradlew :app:testDebugUnitTest    # JVM + Robolectric tests
 ./gradlew :app:lintDebug
 ./gradlew :app:assembleRelease      # R8-minified, unsigned
+./gradlew :app:assemblePerf         # release-optimized, profileable, debug-signed → dist/
 ```
 
 `AxiomScreenshotCaptureTest` writes PNG renders to `app/build/screenshots/` for layout review.

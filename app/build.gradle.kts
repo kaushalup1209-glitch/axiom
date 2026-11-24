@@ -38,6 +38,16 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // Release-optimized build for on-device performance testing: same R8 shrinking and
+        // baseline profile as release, non-debuggable, profileable by Perfetto/Android Studio,
+        // and signed with the local debug key so it installs without a release keystore.
+        create("perf") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            isProfileable = true
+        }
     }
 
     compileOptions {
@@ -105,7 +115,8 @@ dependencies {
 
 // ===== SECTION: APP_DIST_DEBUG_APK =====
 // Every assembleDebug refreshes dist/axiom-<versionName>-debug.apk, the single installable
-// build kept at the project root. Sync also removes stale APKs left from older versions.
+// debug build kept at the project root. Sync also removes stale debug APKs from older
+// versions and keeps the performance APK.
 val distDebugApkName = "axiom-${android.defaultConfig.versionName}-debug.apk"
 val syncDebugApkToDist = tasks.register<Sync>("syncDebugApkToDist") {
     description = "Copies the latest debug APK to dist/$distDebugApkName."
@@ -113,8 +124,25 @@ val syncDebugApkToDist = tasks.register<Sync>("syncDebugApkToDist") {
     into(rootProject.layout.projectDirectory.dir("dist"))
     // String-pattern rename keeps the task compatible with the configuration cache.
     rename("app-debug\\.apk", distDebugApkName)
+    preserve { include("axiom-*-release-perf.apk") }
 }
 tasks.matching { it.name == "assembleDebug" }.configureEach {
     finalizedBy(syncDebugApkToDist)
 }
 // ===== END SECTION: APP_DIST_DEBUG_APK =====
+
+// ===== SECTION: APP_DIST_PERF_APK =====
+// Every assemblePerf refreshes dist/axiom-<versionName>-release-perf.apk, the optimized build
+// for on-device performance testing, and keeps the debug APK.
+val distPerfApkName = "axiom-${android.defaultConfig.versionName}-release-perf.apk"
+val syncPerfApkToDist = tasks.register<Sync>("syncPerfApkToDist") {
+    description = "Copies the latest perf APK to dist/$distPerfApkName."
+    from(layout.buildDirectory.file("outputs/apk/perf/app-perf.apk"))
+    into(rootProject.layout.projectDirectory.dir("dist"))
+    rename("app-perf\\.apk", distPerfApkName)
+    preserve { include("axiom-*-debug.apk") }
+}
+tasks.matching { it.name == "assemblePerf" }.configureEach {
+    finalizedBy(syncPerfApkToDist)
+}
+// ===== END SECTION: APP_DIST_PERF_APK =====

@@ -6,7 +6,9 @@
  *   app/src/commonMain/kotlin/com/kyant/backdrop/catalog/utils/DampedDragAnimation.kt
  * Changes for Axiom: package name, Android SystemClock as the velocity time source,
  * direct use of kotlinx.coroutines.android.awaitFrame, spring values moved to
- * AxiomMotionTokens (same values) and scaled by the user's animation scale, and section labels.
+ * AxiomMotionTokens (same values) and scaled by the user's animation scale, press and
+ * stretch driven by ContinuousSpring so press→release reverses without an idle frame,
+ * a guard so a stale release cannot cancel a newer press, and section labels.
  */
 package com.kaushalkr.axiom.core.designsystem.glass.interaction
 
@@ -21,6 +23,7 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotion
 import com.kaushalkr.axiom.core.designsystem.motion.AxiomMotionTokens
+import com.kaushalkr.axiom.core.designsystem.motion.ContinuousSpring
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.filter
@@ -51,24 +54,17 @@ class DampedDragAnimation(
         motion.spring(AxiomMotionTokens.DragValue, visibilityThreshold)
     private val velocityAnimationSpec =
         motion.spring(AxiomMotionTokens.DragVelocity, visibilityThreshold * 10f)
-    private val pressProgressAnimationSpec =
-        motion.spring(AxiomMotionTokens.DragPress, 0.001f)
-    private val scaleXAnimationSpec =
-        motion.spring(AxiomMotionTokens.DragScaleX, 0.001f)
-    private val scaleYAnimationSpec =
-        motion.spring(AxiomMotionTokens.DragScaleY, 0.001f)
     // ===== END SECTION: GLASS_DAMPED_DRAG_SPECS =====
 
     private val valueAnimation =
         Animatable(initialValue, visibilityThreshold)
     private val velocityAnimation =
         Animatable(0f, 5f)
-    private val pressProgressAnimation =
-        Animatable(0f, 0.001f)
-    private val scaleXAnimation =
-        Animatable(initialScale, 0.001f)
-    private val scaleYAnimation =
-        Animatable(initialScale, 0.001f)
+    // Press and stretch are retargeted, never restarted (see ContinuousSpring).
+    private val pressProgressSpring = ContinuousSpring(0f, animationScope, motion)
+    private val scaleXSpring = ContinuousSpring(initialScale, animationScope, motion)
+    private val scaleYSpring = ContinuousSpring(initialScale, animationScope, motion)
+    private var pressGeneration = 0
 
     private val mutatorMutex = MutatorMutex()
 
@@ -77,9 +73,9 @@ class DampedDragAnimation(
     val value: Float get() = valueAnimation.value
     val progress: Float get() = (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
     val targetValue: Float get() = valueAnimation.targetValue
-    val pressProgress: Float get() = pressProgressAnimation.value
-    val scaleX: Float get() = scaleXAnimation.value
-    val scaleY: Float get() = scaleYAnimation.value
+    val pressProgress: Float get() = pressProgressSpring.value
+    val scaleX: Float get() = scaleXSpring.value
+    val scaleY: Float get() = scaleYSpring.value
     val velocity: Float get() = velocityAnimation.value
 
     // ===== SECTION: GLASS_DAMPED_DRAG_GESTURE_MODIFIER =====
@@ -106,14 +102,14 @@ class DampedDragAnimation(
     // ===== SECTION: GLASS_DAMPED_DRAG_CONTROL =====
     fun press() {
         velocityTracker.resetTracking()
-        animationScope.launch {
-            launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
-            launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
-            launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
-        }
+        pressGeneration++
+        pressProgressSpring.animateTo(1f, AxiomMotionTokens.DragPress)
+        scaleXSpring.animateTo(pressedScale, AxiomMotionTokens.DragScaleX)
+        scaleYSpring.animateTo(pressedScale, AxiomMotionTokens.DragScaleY)
     }
 
     fun release() {
+        val releasingGeneration = pressGeneration
         animationScope.launch {
             awaitFrame()
             if (value != targetValue) {
@@ -122,9 +118,11 @@ class DampedDragAnimation(
                     .filter { abs(it - valueAnimation.targetValue) < threshold }
                     .first()
             }
-            launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
-            launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }
-            launch { scaleYAnimation.animateTo(initialScale, scaleYAnimationSpec) }
+            // A newer press owns the springs; leave them pressed.
+            if (releasingGeneration != pressGeneration) return@launch
+            pressProgressSpring.animateTo(0f, AxiomMotionTokens.DragPress)
+            scaleXSpring.animateTo(initialScale, AxiomMotionTokens.DragScaleX)
+            scaleYSpring.animateTo(initialScale, AxiomMotionTokens.DragScaleY)
         }
     }
 

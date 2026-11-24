@@ -51,8 +51,11 @@ object AxiomMotionTokens {
     val PressIn = SpringSpecValues(dampingRatio = 0.85f, stiffness = 520f)
     val PressRelease = SpringSpecValues(dampingRatio = 0.9f, stiffness = 240f)
     val PressFollow = SpringSpecValues(dampingRatio = 0.88f, stiffness = 360f)
-    val PressOverlayIn = TweenSpecValues(durationMillis = 90, easing = AxiomEasing.Standard)
-    val PressOverlayOut = TweenSpecValues(durationMillis = 260, easing = AxiomEasing.Standard)
+    val PressOverlayIn = SpringSpecValues(dampingRatio = 1f, stiffness = 900f)
+    val PressOverlayRelease = SpringSpecValues(dampingRatio = 1f, stiffness = 200f)
+
+    /** A quick tap keeps rising to this level before fading, so it stays visible. */
+    const val PRESS_OVERLAY_MIN_PEAK = 0.6f
 
     // Liquid Glass drag (indicator, toggle and slider thumbs) — Backdrop catalog values
     val DragValue = SpringSpecValues(dampingRatio = 1f, stiffness = 1000f)

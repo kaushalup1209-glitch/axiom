@@ -10,7 +10,9 @@ Axiom includes or depends on the following open-source software.
 - License: Apache License 2.0. Full text: [`third_party/kyant-backdrop/LICENSE`](third_party/kyant-backdrop/LICENSE)
 - Copyright 2025 Kyant
 
-The rendering itself comes unmodified from the published Backdrop library. The following Axiom
+The rendering pipeline comes from the published Backdrop library. Axiom shares one compiled copy of
+each Backdrop shader across all glass elements (identical AGSL and uniforms) to avoid main-thread
+shader compilation. The following Axiom
 files are adapted from the Backdrop catalog sample app (`app/src/commonMain/kotlin/com/kyant/backdrop/catalog/`).
 Each file has a header that names its source file and lists the changes made:
 
@@ -24,6 +26,8 @@ Each file has a header that names its source file and lists the changes made:
 | `core/designsystem/components/GlassSlider.kt` | `components/LiquidSlider.kt` |
 | `core/designsystem/components/GlassTabRow.kt` | `components/LiquidBottomTabs.kt` |
 | `core/designsystem/components/GlassTab.kt` | `components/LiquidBottomTab.kt` |
+| `core/designsystem/glass/shader/GlassShaderSources.kt` | library `internal/Shaders.kt` and catalog `utils/InteractiveHighlight.kt` (AGSL copied unchanged) |
+| `core/designsystem/glass/shader/CachedGlassEffects.kt` | library `effects/Lens.kt` and `highlight/HighlightStyle.kt` |
 
 ## Material Symbols — Google
 
